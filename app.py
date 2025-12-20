@@ -34,10 +34,10 @@ st.markdown("""
     }
     
     html, body, [class*="css"] {
-        font-family: 'Inter', 'Segoe UI', Arial, sans-serif; /* Fuente más moderna */
+        font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
     }
 
-    /* --- 2. TÍTULOS CON DEGRADADO (EFECTO PREMIUM) --- */
+    /* --- 2. TÍTULOS CON DEGRADADO --- */
     h1 {
         background: -webkit-linear-gradient(45deg, #0d6efd, #00d2ff);
         -webkit-background-clip: text;
@@ -49,23 +49,21 @@ st.markdown("""
 
     /* --- 3. TARJETAS INTERACTIVAS (GLASSMORPHISM) --- */
     .instruccion-box, .rut-card, .reporte-box, .tutorial-step {
-        background: rgba(38, 39, 48, 0.7) !important; /* Fondo semitransparente */
-        backdrop-filter: blur(10px); /* Efecto vidrio */
+        background: rgba(38, 39, 48, 0.7) !important;
+        backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 25px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; /* Animación suave */
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     }
 
-    /* EFECTO HOVER (CUANDO PASAS EL MOUSE) */
     .instruccion-box:hover, .rut-card:hover, .reporte-box:hover, .tutorial-step:hover {
-        transform: translateY(-5px); /* Se levanta un poco */
-        box-shadow: 0 10px 20px rgba(0,0,0,0.4); /* Sombra más profunda */
-        border-color: #0d6efd; /* El borde se ilumina azul */
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        border-color: #0d6efd;
     }
 
-    /* Detalles dentro de las tarjetas */
     .instruccion-box { border-left: 4px solid #0d6efd; }
     .instruccion-box h4 { color: #0d6efd !important; margin-top: 0; font-weight: bold; }
     .instruccion-box p, .instruccion-box li { color: #b0b3b8 !important; }
@@ -85,8 +83,8 @@ st.markdown("""
     
     .stButton>button:hover {
         background: linear-gradient(90deg, #0b5ed7 0%, #004494 100%) !important;
-        box-shadow: 0 6px 12px rgba(13, 110, 253, 0.4); /* Resplandor azul */
-        transform: scale(1.02); /* Crece un poquito */
+        box-shadow: 0 6px 12px rgba(13, 110, 253, 0.4);
+        transform: scale(1.02);
     }
 
     /* --- 5. ENLACES --- */
@@ -105,7 +103,6 @@ st.markdown("""
         padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #0f5132;
     }
     
-    /* --- 7. SCROLLBAR PERSONALIZADO (ELEGANTE) --- */
     ::-webkit-scrollbar { width: 10px; }
     ::-webkit-scrollbar-track { background: #0e1117; }
     ::-webkit-scrollbar-thumb { background: #303030; border-radius: 5px; }
@@ -124,7 +121,7 @@ BASE_RET_SERVICIOS = 4 * UVT_2025
 BASE_RET_COMPRAS = 27 * UVT_2025
 
 # ==============================================================================
-# 3. LÓGICA DE NEGOCIO (INTACTA)
+# 3. LÓGICA DE NEGOCIO
 # ==============================================================================
 
 def calcular_dv_colombia(nit_sin_dv):
@@ -242,6 +239,7 @@ with st.sidebar:
     
     opciones_menu = [
         "🏠 Inicio / Quiénes Somos",
+        "⚖️ Cruce DIAN vs Contabilidad", # <-- NUEVA HERRAMIENTA INNOVADORA
         "📧 Lector XML (Facturación)",
         "🤝 Conciliador Bancario (IA)",
         "📂 Auditoría Masiva de Gastos",
@@ -261,7 +259,7 @@ with st.sidebar:
         api_key = st.text_input("API Key Google:", type="password")
         if api_key: genai.configure(api_key=api_key)
     
-    st.markdown("<br><center><small>v4.5.2 | Build 2025</small></center>", unsafe_allow_html=True)
+    st.markdown("<br><center><small>v5.0 | Build 2025</small></center>", unsafe_allow_html=True)
 
 # ==============================================================================
 # 5. DESARROLLO DE PESTAÑAS
@@ -271,7 +269,6 @@ with st.sidebar:
 # 0. INICIO / QUIÉNES SOMOS
 # ------------------------------------------------------------------------------
 if menu == "🏠 Inicio / Quiénes Somos":
-    # Saludo Dinámico
     st.markdown(f"# {icono_saludo} {saludo}, Colega.")
     st.markdown("### Bienvenido a tu Centro de Comando Contable Inteligente.")
     
@@ -289,11 +286,11 @@ if menu == "🏠 Inicio / Quiénes Somos":
         st.markdown("### 🛠️ Herramientas de Alto Impacto:")
         c_tool1, c_tool2 = st.columns(2)
         with c_tool1:
+            st.info("⚖️ **Cruce DIAN:** Compara lo que la DIAN sabe de ti vs. tu Contabilidad.")
             st.info("📧 **XML Miner:** Extrae datos de miles de facturas en segundos.")
-            st.info("🤝 **Bank Match:** Concilia bancos con IA.")
         with c_tool2:
+            st.info("🤝 **Bank Match:** Concilia bancos con IA.")
             st.info("🛡️ **Escudo Fiscal:** Audita gastos y nómina masivamente.")
-            st.info("💰 **Radar de Caja:** Predice tu liquidez futura.")
         
     with col_intro2:
         st.markdown("""
@@ -301,9 +298,9 @@ if menu == "🏠 Inicio / Quiénes Somos":
             <h4>💡 Workflow Recomendado</h4>
             <ol>
                 <li>Descarga auxiliares de tu ERP (Siigo, World Office).</li>
-                <li>Sube los archivos al módulo correspondiente.</li>
-                <li>Deja que la IA audite.</li>
-                <li>Descarga el papel de trabajo listo.</li>
+                <li>Descarga el reporte de terceros de la DIAN.</li>
+                <li>Usa el "Cruce DIAN" para detectar ingresos/costos omitidos.</li>
+                <li>Usa "Escudo Fiscal" para auditar deducibilidad.</li>
             </ol>
         </div>
         """, unsafe_allow_html=True)
@@ -337,6 +334,74 @@ if menu == "🏠 Inicio / Quiénes Somos":
         <p>Copia el código (AIza...) y pégalo en el menú lateral izquierdo.</p>
         </div>
         """, unsafe_allow_html=True)
+
+# ------------------------------------------------------------------------------
+# NUEVO: CRUCE DIAN VS CONTABILIDAD
+# ------------------------------------------------------------------------------
+elif menu == "⚖️ Cruce DIAN vs Contabilidad":
+    st.header("⚖️ Auditor de Exógena (Cruce DIAN)")
+    st.markdown("""
+    <div class='instruccion-box'>
+        <h4>💡 El "Detector de Mentiras" Fiscal</h4>
+        <p>Esta herramienta es vital para el cierre contable. Compara la información que la DIAN tiene de ti (Reporte de Terceros) contra tu Contabilidad Interna. Detecta facturas que proveedores reportaron pero tú no causaste, o ingresos que olvidaste declarar.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col_dian, col_conta = st.columns(2)
+    with col_dian:
+        st.subheader("🏛️ 1. Archivo DIAN")
+        file_dian = st.file_uploader("Subir 'Reporte Terceros DIAN' (.xlsx)", type=['xlsx'])
+    with col_conta:
+        st.subheader("📒 2. Contabilidad")
+        file_conta = st.file_uploader("Subir Auxiliar por Tercero (.xlsx)", type=['xlsx'])
+        
+    if file_dian and file_conta:
+        df_dian = pd.read_excel(file_dian)
+        df_conta = pd.read_excel(file_conta)
+        
+        st.write("---")
+        st.subheader("⚙️ Mapeo de Columnas (NIT y Valor)")
+        c1, c2, c3, c4 = st.columns(4)
+        nit_dian = c1.selectbox("NIT (Archivo DIAN):", df_dian.columns)
+        val_dian = c2.selectbox("Valor (Archivo DIAN):", df_dian.columns)
+        nit_conta = c3.selectbox("NIT (Tu Contabilidad):", df_conta.columns)
+        val_conta = c4.selectbox("Saldo (Tu Contabilidad):", df_conta.columns)
+        
+        if st.button("🔎 EJECUTAR CRUCE FISCAL"):
+            # Limpieza básica de NITs (quitar DV, puntos, etc si es necesario)
+            # Agrupamos por NIT para tener totales por tercero
+            dian_grouped = df_dian.groupby(nit_dian)[val_dian].sum().reset_index()
+            dian_grouped.columns = ['NIT', 'Valor_DIAN']
+            
+            conta_grouped = df_conta.groupby(nit_conta)[val_conta].sum().reset_index()
+            conta_grouped.columns = ['NIT', 'Valor_Conta']
+            
+            # Cruce (Merge)
+            cruce = pd.merge(dian_grouped, conta_grouped, on='NIT', how='outer').fillna(0)
+            cruce['Diferencia'] = cruce['Valor_DIAN'] - cruce['Valor_Conta']
+            
+            # Filtrar solo diferencias significativas
+            diferencias = cruce[abs(cruce['Diferencia']) > 1000] # Umbral de $1.000 pesos
+            
+            st.success("Cruce Finalizado.")
+            
+            # Métricas
+            m1, m2 = st.columns(2)
+            m1.metric("Total Reportado DIAN", f"${cruce['Valor_DIAN'].sum():,.0f}")
+            m2.metric("Total Tu Contabilidad", f"${cruce['Valor_Conta'].sum():,.0f}")
+            
+            if not diferencias.empty:
+                st.error(f"⚠️ Se encontraron {len(diferencias)} terceros con diferencias significativas.")
+                st.dataframe(diferencias.style.format("{:,.0f}"), use_container_width=True)
+                
+                # Descarga
+                out = io.BytesIO()
+                with pd.ExcelWriter(out, engine='xlsxwriter') as w:
+                    diferencias.to_excel(w, index=False)
+                st.download_button("📥 Descargar Reporte de Diferencias", out.getvalue(), "Auditoria_Exogena.xlsx")
+            else:
+                st.balloons()
+                st.success("✅ ¡Increíble! Tu contabilidad cuadra perfectamente con la DIAN.")
 
 # ------------------------------------------------------------------------------
 # 1. LECTOR XML
