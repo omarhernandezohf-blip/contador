@@ -9,82 +9,64 @@ from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 
 # ==============================================================================
-# 1. CONFIGURACIÓN VISUAL PROFESIONAL (ESTILO CORPORATIVO)
+# 1. CONFIGURACIÓN VISUAL (VOLVIMOS AL COLOR ORIGINAL + ARREGLO DE TEXTO)
 # ==============================================================================
 st.set_page_config(page_title="Asistente Contable Pro 2025", page_icon="📊", layout="wide")
 
 st.markdown("""
     <style>
-    /* 1. FUENTE GLOBAL LIMPIA */
-    html, body, [class*="css"] {
-        font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-    }
+    .main { background-color: #f8f9fa; }
     
-    /* 2. FONDO DE LA APLICACIÓN (Gris muy suave para descansar la vista) */
-    .stApp {
-        background-color: #f8f9fa;
-    }
+    /* 1. VOLVIMOS AL AZUL ORIGINAL (Brillante) */
+    h1 { color: #0d6efd; font-weight: 800; }
+    h2, h3 { color: #343a40; }
     
-    /* 3. TÍTULOS (Azul Corporativo) */
-    h1 { color: #004085 !important; font-weight: 800; }
-    h2 { color: #343a40 !important; font-weight: 700; }
-    h3 { color: #495057 !important; font-weight: 600; }
-    
-    /* 4. CAJAS DE INSTRUCCIONES Y TARJETAS (SOLUCIÓN TEXTO INVISIBLE) */
-    .instruccion-box, .rut-card, .tutorial-step, .reporte-box {
-        background-color: #ffffff !important; /* Fondo Blanco Puro */
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Sombra suave elegante */
-    }
-    
-    /* BORDE IZQUIERDO DE ACENTO */
-    .instruccion-box { border-left: 5px solid #0056b3; }
-    .rut-card { border-left: 5px solid #28a745; }
-    .reporte-box { border-left: 5px solid #17a2b8; }
-
-    /* ¡AQUÍ ESTÁ LA CORRECCIÓN! FORZAMOS TEXTO NEGRO */
-    .instruccion-box h4, .rut-card h3, .tutorial-step h4 {
-        color: #0056b3 !important; /* Títulos Azules */
-        margin-top: 0;
-    }
-    .instruccion-box p, .instruccion-box li, .instruccion-box ol, 
-    .rut-card p, .tutorial-step p, .reporte-box p {
-        color: #212529 !important; /* TEXTO GRIS OSCURO (CASI NEGRO) SIEMPRE */
-        font-size: 16px;
-        line-height: 1.6;
-    }
-
-    /* 5. BOTONES PROFESIONALES */
+    /* 2. BOTONES ORIGINALES */
     .stButton>button {
-        background-color: #0056b3; 
+        background-color: #0d6efd; 
         color: white; 
+        border-radius: 8px; 
+        font-weight: bold; 
+        width: 100%; 
+        height: 3.5em; 
         border: none;
-        border-radius: 6px;
-        font-weight: 600;
-        padding: 0.5rem 1rem;
-        transition: background-color 0.3s;
     }
-    .stButton>button:hover {
-        background-color: #003d82; /* Azul más oscuro al pasar mouse */
-        color: white;
+    .stButton>button:hover { 
+        background-color: #0b5ed7; 
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2); 
     }
     
-    /* 6. ENLACES */
-    a { color: #0056b3 !important; text-decoration: none; font-weight: bold; }
+    /* 3. TARJETAS Y CAJAS */
+    .reporte-box {
+        background-color: #ffffff; padding: 20px; border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 6px solid #0d6efd;
+    }
+    .rut-card {
+        background-color: #ffffff; padding: 20px; border-radius: 10px;
+        border-left: 5px solid #1565c0; color: #343a40;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .metric-box-red { background-color: #f8d7da; padding: 10px; border-radius: 5px; color: #721c24; text-align: center; }
+    .metric-box-green { background-color: #d1e7dd; padding: 10px; border-radius: 5px; color: #0f5132; text-align: center; }
+    .tutorial-step { background-color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #dee2e6; }
+
+    /* 4. ¡AQUÍ ESTÁ EL ARREGLO! FORZAMOS LETRA NEGRA EN INSTRUCCIONES */
+    .instruccion-box {
+        background-color: #e2e3e5; 
+        color: #212529 !important; /* IMPORTANTE: Esto fuerza el color negro */
+        padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #343a40;
+    }
+    .instruccion-box h4 { 
+        color: #000000 !important; /* Título negro */
+        margin-top: 0; font-weight: bold; 
+    }
+    .instruccion-box p, .instruccion-box li, .instruccion-box ol { 
+        color: #212529 !important; /* Texto del párrafo negro */
+    }
+    
+    /* Enlaces */
+    a { color: #0d6efd; text-decoration: none; font-weight: bold; }
     a:hover { text-decoration: underline; }
-    
-    /* 7. ALERTAS */
-    .metric-box-red { 
-        background-color: #f8d7da; color: #721c24; 
-        padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #f5c6cb; 
-    }
-    .metric-box-green { 
-        background-color: #d4edda; color: #155724; 
-        padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #c3e6cb; 
-    }
     </style>
     """, unsafe_allow_html=True)
 
