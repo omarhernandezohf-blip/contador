@@ -32,11 +32,10 @@ st.markdown("""
         border-left: 5px solid #1565c0; color: #343a40;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    /* Estilos Tesorería */
     .metric-box-red { background-color: #f8d7da; padding: 10px; border-radius: 5px; color: #721c24; text-align: center; }
     .metric-box-green { background-color: #d1e7dd; padding: 10px; border-radius: 5px; color: #0f5132; text-align: center; }
     
-    /* VISIBILIDAD DE TEXTO (Instrucciones) */
+    /* VISIBILIDAD DE TEXTO */
     .instruccion-box {
         background-color: #e2e3e5; 
         color: #212529 !important; 
@@ -44,6 +43,11 @@ st.markdown("""
     }
     .instruccion-box h4 { color: #000000 !important; margin-top: 0; font-weight: bold; }
     .instruccion-box p, .instruccion-box li { color: #212529 !important; }
+    
+    /* Estilo para el tutorial */
+    .tutorial-step {
+        background-color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #dee2e6;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -58,7 +62,7 @@ BASE_RET_SERVICIOS = 4 * UVT_2025
 BASE_RET_COMPRAS = 27 * UVT_2025
 
 # ==============================================================================
-# 3. LÓGICA DE NEGOCIO (EL MOTOR CONTABLE)
+# 3. LÓGICA DE NEGOCIO (FUNCIONES)
 # ==============================================================================
 
 def calcular_dv_colombia(nit_sin_dv):
@@ -167,155 +171,107 @@ def parsear_xml_dian(archivo_xml):
         return {"Archivo": archivo_xml.name, "Error": "Error XML"}
 
 # ==============================================================================
-# 4. BARRA LATERAL
+# 4. BARRA LATERAL (MENÚ ORGANIZADO POR IMPORTANCIA)
 # ==============================================================================
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/9320/9320399.png", width=80)
     st.title("Suite Contable IA")
     st.markdown("---")
     
-    menu = st.radio("Herramientas:", 
-                    ["🤝 Conciliador Bancario (IA)", # <-- NUEVA HERRAMIENTA
-                     "📧 Lector XML (Facturación)", 
-                     "💰 Tesorería & Flujo de Caja", 
-                     "🔍 Validador de RUT (Real)",  
-                     "📂 Auditoría Masiva de Gastos", 
-                     "👥 Escáner de Nómina (UGPP)", 
-                     "💰 Calculadora Costos (Masiva)",
-                     "📸 Digitalización (OCR)",
-                     "📊 Analítica Financiera"])
+    # NUEVO ORDEN LÓGICO: Inicio -> Operativo Diario (Masivo) -> Análisis -> Consultas
+    opciones_menu = [
+        "🏠 Inicio / Quiénes Somos",
+        "📧 Lector XML (Facturación)",
+        "🤝 Conciliador Bancario (IA)",
+        "📂 Auditoría Masiva de Gastos",
+        "👥 Escáner de Nómina (UGPP)",
+        "💰 Tesorería & Flujo de Caja",
+        "💰 Calculadora Costos (Masiva)",
+        "📊 Analítica Financiera",
+        "🔍 Validador de RUT (Real)",
+        "📸 Digitalización (OCR)"
+    ]
+    
+    menu = st.radio("Menú Principal:", opciones_menu)
     
     st.markdown("---")
     with st.expander("🔑 Configuración IA"):
-        st.info("Activar Inteligencia Artificial:")
-        api_key = st.text_input("API Key:", type="password")
+        st.info("Pega aquí tu llave para activar las funciones inteligentes:")
+        api_key = st.text_input("API Key Google:", type="password")
         if api_key: genai.configure(api_key=api_key)
 
 # ==============================================================================
-# 5. PESTAÑAS Y FUNCIONALIDADES
+# 5. DESARROLLO DE PESTAÑAS
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# MÓDULO NUEVO: CONCILIADOR BANCARIO
+# 0. INICIO / QUIÉNES SOMOS (NUEVA PESTAÑA)
 # ------------------------------------------------------------------------------
-if menu == "🤝 Conciliador Bancario (IA)":
-    st.header("🤝 Conciliador Bancario Automático")
+if menu == "🏠 Inicio / Quiénes Somos":
+    st.header("👋 Bienvenido a tu Asistente Contable 4.0")
     
-    st.markdown("""
-    <div class='instruccion-box'>
-        <h4>💡 ¿Cómo funciona el Match Automático?</h4>
-        <p>Cruza los movimientos del Banco contra tu Contabilidad para detectar diferencias en segundos.</p>
-        <p><strong>Pasos:</strong></p>
-        <ol>
-            <li>Sube el <strong>Extracto Bancario</strong> (Excel).</li>
-            <li>Sube el <strong>Libro Auxiliar de Bancos</strong> de tu software (Excel).</li>
-            <li>El sistema buscará coincidencias exactas por <strong>Valor</strong> y <strong>Fecha Cercana</strong> (Margen de 3 días).</li>
-        </ol>
-    </div>
-    """, unsafe_allow_html=True)
+    col_intro1, col_intro2 = st.columns([1.5, 1])
     
-    col_banco, col_libro = st.columns(2)
-    
-    with col_banco:
-        st.subheader("🏦 1. Extracto Bancario")
-        file_banco = st.file_uploader("Subir Extracto (.xlsx)", type=['xlsx'])
+    with col_intro1:
+        st.markdown("""
+        ### 🚀 ¿Quiénes Somos?
+        Somos una herramienta creada **por contadores, para contadores**. Entendemos que nuestra profesión ha cambiado: ya no somos digitadores, somos analistas y asesores estratégicos.
         
-    with col_libro:
-        st.subheader("📒 2. Auxiliar Contable")
-        file_libro = st.file_uploader("Subir Auxiliar (.xlsx)", type=['xlsx'])
+        Nuestra misión es eliminar el "trabajo de carpintería" (digitar, puntear, revisar manualmente) usando la potencia de la **Inteligencia Artificial** y la automatización.
         
-    if file_banco and file_libro:
-        df_banco = pd.read_excel(file_banco)
-        df_libro = pd.read_excel(file_libro)
+        ### 🛠️ ¿Qué hace esta aplicación?
+        Esta Suite integra más de 9 herramientas especializadas para:
+        * **Automatizar:** Lectura de Facturas Electrónicas (XML) y Conciliación Bancaria.
+        * **Auditar:** Revisión masiva de gastos (Art 771-5) y Nómina (UGPP).
+        * **Prevenir:** Alertas de liquidez y validación de terceros (RUT).
+        """)
         
-        st.write("---")
-        st.subheader("⚙️ Mapeo de Columnas")
-        c1, c2, c3, c4 = st.columns(4)
-        col_fecha_b = c1.selectbox("Fecha Banco:", df_banco.columns, key="fb")
-        col_valor_b = c2.selectbox("Valor/Importe Banco:", df_banco.columns, key="vb")
-        col_fecha_l = c3.selectbox("Fecha Contabilidad:", df_libro.columns, key="fl")
-        col_valor_l = c4.selectbox("Valor/Saldo Contabilidad:", df_libro.columns, key="vl")
-        
-        col_desc_b = st.selectbox("Descripción Banco (Para detalle):", df_banco.columns, key="db")
-        
-        if st.button("🔄 EJECUTAR CONCILIACIÓN"):
-            # Procesamiento
-            df_banco['Fecha_Dt'] = pd.to_datetime(df_banco[col_fecha_b])
-            df_libro['Fecha_Dt'] = pd.to_datetime(df_libro[col_fecha_l])
-            
-            # Crear columnas de match
-            df_banco['Conciliado'] = False
-            df_libro['Conciliado'] = False
-            df_banco['Match_ID'] = None
-            
-            matches = []
-            
-            # Algoritmo de Cruce
-            st.write("🔍 Buscando coincidencias...")
-            bar_prog = st.progress(0)
-            total_items = len(df_banco)
-            
-            for idx_b, row_b in df_banco.iterrows():
-                bar_prog.progress((idx_b + 1) / total_items)
-                valor_b = row_b[col_valor_b]
-                fecha_b = row_b['Fecha_Dt']
-                
-                # Buscar en libro: Mismo valor Y fecha dentro de +/- 3 días
-                candidatos = df_libro[
-                    (df_libro[col_valor_l] == valor_b) & 
-                    (df_libro['Conciliado'] == False) &
-                    (df_libro['Fecha_Dt'] >= (fecha_b - timedelta(days=3))) &
-                    (df_libro['Fecha_Dt'] <= (fecha_b + timedelta(days=3)))
-                ]
-                
-                if not candidatos.empty:
-                    # Encontramos match! (Tomamos el primero por simplicidad)
-                    idx_l = candidatos.index[0]
-                    df_banco.at[idx_b, 'Conciliado'] = True
-                    df_libro.at[idx_l, 'Conciliado'] = True
-                    matches.append({
-                        "Fecha Banco": row_b[col_fecha_b],
-                        "Descripción": row_b[col_desc_b],
-                        "Valor": valor_b,
-                        "Estado": "✅ CRUZADO"
-                    })
-            
-            # Separar Partidas Conciliatorias
-            pendientes_banco = df_banco[df_banco['Conciliado'] == False]
-            pendientes_libro = df_libro[df_libro['Conciliado'] == False]
-            
-            # --- RESULTADOS ---
-            st.success(f"Proceso Terminado. Se cruzaron {len(matches)} partidas automáticamente.")
-            
-            tab1, tab2, tab3 = st.tabs(["✅ Cruzados", "⚠️ Pendientes en Banco", "⚠️ Pendientes en Libros"])
-            
-            with tab1:
-                st.dataframe(pd.DataFrame(matches))
-            
-            with tab2:
-                st.warning("Estas partidas están en el BANCO pero NO en Contabilidad (Posibles Notas Débito/Crédito faltantes):")
-                st.dataframe(pendientes_banco[[col_fecha_b, col_desc_b, col_valor_b]])
-            
-            with tab3:
-                st.warning("Estas partidas están en CONTABILIDAD pero NO en el Banco (Posibles Cheques no cobrados):")
-                st.dataframe(pendientes_libro[[col_fecha_l, col_valor_l]])
-                
-            # Descarga Informe
-            output_concil = io.BytesIO()
-            with pd.ExcelWriter(output_concil, engine='xlsxwriter') as writer:
-                pd.DataFrame(matches).to_excel(writer, sheet_name='Cruzados', index=False)
-                pendientes_banco.to_excel(writer, sheet_name='Pendientes_Banco', index=False)
-                pendientes_libro.to_excel(writer, sheet_name='Pendientes_Libro', index=False)
-                
-            st.download_button("📥 Descargar Informe de Conciliación", output_concil.getvalue(), "Conciliacion_Bancaria.xlsx")
+    with col_intro2:
+        st.info("""
+        ### 💡 ¿Cómo funciona?
+        La mayoría de módulos funcionan con **cargas masivas de Excel**.
+        1. Descargas el reporte de tu software (Siigo, World Office, etc.).
+        2. Lo subes aquí.
+        3. La IA analiza y te entrega un reporte de auditoría listo.
+        """)
 
+    st.markdown("---")
+    
+    st.subheader("🔑 Tutorial: ¿Cómo obtener tu API Key GRATIS?")
+    st.write("Para que la Inteligencia Artificial (Gemini) funcione y pueda 'leer' tus documentos o darte consejos, necesitas una llave gratuita de Google. Es muy fácil:")
+    
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown("""
+        <div class='tutorial-step'>
+        <strong>Paso 1:</strong><br>
+        Ingresa a <strong>Google AI Studio</strong> con tu cuenta de Gmail.<br><br>
+        <a href='https://aistudio.google.com/app/apikey' target='_blank'>🔗 Ir a Google AI Studio</a>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with c2:
+        st.markdown("""
+        <div class='tutorial-step'>
+        <strong>Paso 2:</strong><br>
+        Haz clic en el botón azul grande que dice <strong>"Create API Key"</strong> (Crear clave de API).
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with c3:
+        st.markdown("""
+        <div class='tutorial-step'>
+        <strong>Paso 3:</strong><br>
+        Copia el código largo que empieza por "AIza..." y pégalo en el menú de la izquierda de esta app donde dice <strong>"Configuración IA"</strong>.
+        </div>
+        """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# MÓDULO: LECTOR XML
+# 1. LECTOR XML (ALTA PRIORIDAD)
 # ------------------------------------------------------------------------------
 elif menu == "📧 Lector XML (Facturación)":
     st.header("📧 Extractor Masivo XML")
-    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Extrae datos de Facturación Electrónica (XML) a Excel en segundos.</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Extrae datos de Facturación Electrónica (XML) a Excel en segundos. La verdad legal está en el XML, no en el PDF.</p></div>""", unsafe_allow_html=True)
     archivos_xml = st.file_uploader("Arrastra XMLs (Máx 5GB)", type=['xml'], accept_multiple_files=True)
     if archivos_xml and st.button("🚀 PROCESAR"):
         datos_xml = []
@@ -330,11 +286,95 @@ elif menu == "📧 Lector XML (Facturación)":
         st.download_button("📥 Descargar Excel", out.getvalue(), "Resumen_XML.xlsx")
 
 # ------------------------------------------------------------------------------
-# MÓDULO: TESORERÍA
+# 2. CONCILIADOR BANCARIO (ALTA PRIORIDAD)
+# ------------------------------------------------------------------------------
+elif menu == "🤝 Conciliador Bancario (IA)":
+    st.header("🤝 Conciliador Bancario Automático")
+    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Cruza automáticamente tu Extracto Bancario vs. Contabilidad y detecta partidas pendientes.</p></div>""", unsafe_allow_html=True)
+    col_banco, col_libro = st.columns(2)
+    with col_banco:
+        st.subheader("🏦 Extracto")
+        file_banco = st.file_uploader("Subir Extracto (.xlsx)", type=['xlsx'])
+    with col_libro:
+        st.subheader("📒 Contabilidad")
+        file_libro = st.file_uploader("Subir Auxiliar (.xlsx)", type=['xlsx'])
+    if file_banco and file_libro:
+        df_banco = pd.read_excel(file_banco); df_libro = pd.read_excel(file_libro)
+        c1, c2, c3, c4 = st.columns(4)
+        col_fecha_b = c1.selectbox("Fecha Banco:", df_banco.columns, key="fb")
+        col_valor_b = c2.selectbox("Valor Banco:", df_banco.columns, key="vb")
+        col_fecha_l = c3.selectbox("Fecha Conta:", df_libro.columns, key="fl")
+        col_valor_l = c4.selectbox("Valor Conta:", df_libro.columns, key="vl")
+        col_desc_b = st.selectbox("Descripción Banco:", df_banco.columns, key="db")
+        
+        if st.button("🔄 CONCILIAR"):
+            df_banco['Fecha_Dt'] = pd.to_datetime(df_banco[col_fecha_b])
+            df_libro['Fecha_Dt'] = pd.to_datetime(df_libro[col_fecha_l])
+            df_banco['Conciliado'] = False; df_libro['Conciliado'] = False
+            matches = []
+            bar = st.progress(0)
+            for idx_b, row_b in df_banco.iterrows():
+                bar.progress((idx_b+1)/len(df_banco))
+                vb = row_b[col_valor_b]; fb = row_b['Fecha_Dt']
+                cands = df_libro[(df_libro[col_valor_l] == vb) & (~df_libro['Conciliado']) & (df_libro['Fecha_Dt'].between(fb-timedelta(days=3), fb+timedelta(days=3)))]
+                if not cands.empty:
+                    df_banco.at[idx_b, 'Conciliado']=True; df_libro.at[cands.index[0], 'Conciliado']=True
+                    matches.append({"Fecha": row_b[col_fecha_b], "Desc": row_b[col_desc_b], "Valor": vb, "Estado": "✅ OK"})
+            
+            st.success(f"Cruzados: {len(matches)}")
+            t1, t2, t3 = st.tabs(["✅ Cruzados", "⚠️ Pendiente Banco", "⚠️ Pendiente Libro"])
+            with t1: st.dataframe(pd.DataFrame(matches))
+            with t2: st.dataframe(df_banco[~df_banco['Conciliado']])
+            with t3: st.dataframe(df_libro[~df_libro['Conciliado']])
+
+# ------------------------------------------------------------------------------
+# 3. AUDITORÍA GASTOS
+# ------------------------------------------------------------------------------
+elif menu == "📂 Auditoría Masiva de Gastos":
+    st.header("📂 Auditoría Fiscal Masiva")
+    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Detecta errores 771-5 (Efectivo) y retenciones en tu auxiliar de gastos.</p></div>""", unsafe_allow_html=True)
+    ar = st.file_uploader("Auxiliar (.xlsx)", type=['xlsx'])
+    if ar:
+        df = pd.read_excel(ar)
+        c1, c2, c3, c4 = st.columns(4)
+        cf, ct, cc, cv = c1.selectbox("Fecha", df.columns), c2.selectbox("Tercero", df.columns), c3.selectbox("Concepto", df.columns), c4.selectbox("Valor", df.columns)
+        cm = st.selectbox("Método Pago", ["No"]+list(df.columns))
+        if st.button("AUDITAR"):
+            res = []
+            for r in df.to_dict('records'):
+                met = r[cm] if cm != "No" else "Efectivo"
+                h, rs = analizar_gasto_fila(r, cv, cf, cc)
+                v = float(r[cv]) if pd.notnull(r[cv]) else 0
+                txt, rv = [], "BAJO"
+                if "efectivo" in str(met).lower() and v > TOPE_EFECTIVO: txt.append("RECHAZO 771-5"); rv="ALTO"
+                if v >= BASE_RET_SERVICIOS: txt.append("Verif. Retención"); rv="MEDIO" if rv=="BAJO" else rv
+                res.append({"Fila": r[cf], "Val": v, "Riesgo": rv, "Nota": " ".join(txt)})
+            st.dataframe(pd.DataFrame(res))
+
+# ------------------------------------------------------------------------------
+# 4. ESCÁNER NÓMINA UGPP
+# ------------------------------------------------------------------------------
+elif menu == "👥 Escáner de Nómina (UGPP)":
+    st.header("👥 Escáner UGPP")
+    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Detecta excesos del 40% en pagos no salariales (Ley 1393) para evitar sanciones.</p></div>""", unsafe_allow_html=True)
+    an = st.file_uploader("Nómina (.xlsx)", type=['xlsx'])
+    if an:
+        dn = pd.read_excel(an)
+        c1, c2, c3 = st.columns(3)
+        cn, cs, cns = c1.selectbox("Nombre", dn.columns), c2.selectbox("Salario", dn.columns), c3.selectbox("No Salarial", dn.columns)
+        if st.button("AUDITAR"):
+            res = []
+            for r in dn.to_dict('records'):
+                ibc, exc, est, msg = calcular_ugpp_fila(r, cs, cns)
+                res.append({"Emp": r[cn], "Exc": exc, "Est": est})
+            st.dataframe(pd.DataFrame(res))
+
+# ------------------------------------------------------------------------------
+# 5. TESORERÍA
 # ------------------------------------------------------------------------------
 elif menu == "💰 Tesorería & Flujo de Caja":
     st.header("💰 Radar de Liquidez")
-    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Proyecta tu flujo de caja cruzando CxC vs CxP.</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Proyecta tu flujo de caja cruzando CxC vs CxP para evitar iliquidez.</p></div>""", unsafe_allow_html=True)
     saldo_hoy = st.number_input("💵 Saldo Hoy:", min_value=0.0, format="%.2f")
     c1, c2 = st.columns(2)
     fcxc = c1.file_uploader("CxC (.xlsx)", type=['xlsx'])
@@ -356,7 +396,41 @@ elif menu == "💰 Tesorería & Flujo de Caja":
             except: st.error("Error en fechas")
 
 # ------------------------------------------------------------------------------
-# MÓDULO: VALIDADOR DE RUT
+# 6. CALCULADORA COSTOS
+# ------------------------------------------------------------------------------
+elif menu == "💰 Calculadora Costos (Masiva)":
+    st.header("💰 Costos Nómina")
+    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Calcula costo real empresa (Prestaciones + Seg. Social + Parafiscales).</p></div>""", unsafe_allow_html=True)
+    ac = st.file_uploader("Personal (.xlsx)", type=['xlsx'])
+    if ac:
+        dc = pd.read_excel(ac)
+        c1, c2, c3, c4 = st.columns(4)
+        cn, cs, ca, car = c1.selectbox("Nombre", dc.columns), c2.selectbox("Salario", dc.columns), c3.selectbox("Aux Trans", dc.columns), c4.selectbox("ARL", dc.columns)
+        ce = st.selectbox("Exonerado", dc.columns)
+        if st.button("CALCULAR"):
+            rc = []
+            for r in dc.to_dict('records'):
+                c, cr = calcular_costo_empresa_fila(r, cs, ca, car, ce)
+                rc.append({"Emp": r[cn], "Tot": c})
+            st.dataframe(pd.DataFrame(rc))
+
+# ------------------------------------------------------------------------------
+# 7. ANALÍTICA
+# ------------------------------------------------------------------------------
+elif menu == "📊 Analítica Financiera":
+    st.header("📊 Analítica IA")
+    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Diagnóstico financiero automático con IA sobre Balances o Diarios.</p></div>""", unsafe_allow_html=True)
+    fi = st.file_uploader("Financieros", type=['xlsx', 'csv'])
+    if fi and api_key:
+        df = pd.read_csv(fi) if fi.name.endswith('.csv') else pd.read_excel(fi)
+        cd, cv = st.selectbox("Descripción", df.columns), st.selectbox("Valor", df.columns)
+        if st.button("ANALIZAR"):
+            res = df.groupby(cd)[cv].sum().sort_values(ascending=False).head(10)
+            st.bar_chart(res)
+            st.markdown(consultar_ia_gemini(f"Analiza: {res.to_string()}"))
+
+# ------------------------------------------------------------------------------
+# 8. VALIDADOR RUT
 # ------------------------------------------------------------------------------
 elif menu == "🔍 Validador de RUT (Real)":
     st.header("🔍 Validación de RUT")
@@ -368,72 +442,11 @@ elif menu == "🔍 Validador de RUT (Real)":
         st.link_button("🔗 Verificar en DIAN", "https://muisca.dian.gov.co/WebRutMuisca/DefConsultaEstadoRUT.faces")
 
 # ------------------------------------------------------------------------------
-# MÓDULO: AUDITORÍA GASTOS
-# ------------------------------------------------------------------------------
-elif menu == "📂 Auditoría Masiva de Gastos":
-    st.header("📂 Auditoría Fiscal")
-    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Detecta errores 771-5 y retenciones en tu auxiliar.</p></div>""", unsafe_allow_html=True)
-    ar = st.file_uploader("Auxiliar (.xlsx)", type=['xlsx'])
-    if ar:
-        df = pd.read_excel(ar)
-        c1, c2, c3, c4 = st.columns(4)
-        cf, ct, cc, cv = c1.selectbox("F", df.columns), c2.selectbox("T", df.columns), c3.selectbox("C", df.columns), c4.selectbox("V", df.columns)
-        cm = st.selectbox("M", ["No"]+list(df.columns))
-        if st.button("AUDITAR"):
-            res = []
-            for r in df.to_dict('records'):
-                met = r[cm] if cm != "No" else "Efectivo"
-                h, rs = analizar_gasto_fila(r, cv, cf, cc)
-                v = float(r[cv]) if pd.notnull(r[cv]) else 0
-                txt, rv = [], "BAJO"
-                if "efectivo" in str(met).lower() and v > TOPE_EFECTIVO: txt.append("RECHAZO 771-5"); rv="ALTO"
-                if v >= BASE_RET_SERVICIOS: txt.append("Verif. Retención"); rv="MEDIO" if rv=="BAJO" else rv
-                res.append({"Fila": r[cf], "Val": v, "Riesgo": rv, "Nota": " ".join(txt)})
-            st.dataframe(pd.DataFrame(res))
-
-# ------------------------------------------------------------------------------
-# MÓDULO: UGPP
-# ------------------------------------------------------------------------------
-elif menu == "👥 Escáner de Nómina (UGPP)":
-    st.header("👥 Escáner UGPP")
-    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Detecta excesos del 40% en pagos no salariales (Ley 1393).</p></div>""", unsafe_allow_html=True)
-    an = st.file_uploader("Nómina (.xlsx)", type=['xlsx'])
-    if an:
-        dn = pd.read_excel(an)
-        c1, c2, c3 = st.columns(3)
-        cn, cs, cns = c1.selectbox("N", dn.columns), c2.selectbox("S", dn.columns), c3.selectbox("NS", dn.columns)
-        if st.button("AUDITAR"):
-            res = []
-            for r in dn.to_dict('records'):
-                ibc, exc, est, msg = calcular_ugpp_fila(r, cs, cns)
-                res.append({"Emp": r[cn], "Exc": exc, "Est": est})
-            st.dataframe(pd.DataFrame(res))
-
-# ------------------------------------------------------------------------------
-# MÓDULO: COSTOS
-# ------------------------------------------------------------------------------
-elif menu == "💰 Calculadora Costos (Masiva)":
-    st.header("💰 Costos Nómina")
-    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Calcula costo real empresa (Prestaciones + Seg. Social).</p></div>""", unsafe_allow_html=True)
-    ac = st.file_uploader("Personal (.xlsx)", type=['xlsx'])
-    if ac:
-        dc = pd.read_excel(ac)
-        c1, c2, c3, c4 = st.columns(4)
-        cn, cs, ca, car = c1.selectbox("N", dc.columns), c2.selectbox("S", dc.columns), c3.selectbox("Au", dc.columns), c4.selectbox("ARL", dc.columns)
-        ce = st.selectbox("Exo", dc.columns)
-        if st.button("CALCULAR"):
-            rc = []
-            for r in dc.to_dict('records'):
-                c, cr = calcular_costo_empresa_fila(r, cs, ca, car, ce)
-                rc.append({"Emp": r[cn], "Tot": c})
-            st.dataframe(pd.DataFrame(rc))
-
-# ------------------------------------------------------------------------------
-# MÓDULO: OCR
+# 9. OCR FACTURAS
 # ------------------------------------------------------------------------------
 elif menu == "📸 Digitalización (OCR)":
     st.header("📸 OCR Facturas")
-    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Extrae datos de fotos de facturas a Excel.</p></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Extrae datos de fotos de facturas a Excel usando Visión Artificial.</p></div>""", unsafe_allow_html=True)
     af = st.file_uploader("Fotos", type=["jpg", "png"], accept_multiple_files=True)
     if af and st.button("PROCESAR") and api_key:
         do = []
@@ -442,21 +455,6 @@ elif menu == "📸 Digitalización (OCR)":
             bar.progress((i+1)/len(af)); info = ocr_factura(Image.open(f))
             if info: do.append(info)
         st.dataframe(pd.DataFrame(do))
-
-# ------------------------------------------------------------------------------
-# MÓDULO: ANALÍTICA
-# ------------------------------------------------------------------------------
-elif menu == "📊 Analítica Financiera":
-    st.header("📊 Analítica IA")
-    st.markdown("""<div class='instruccion-box'><h4>💡 ¿Para qué sirve?</h4><p>Diagnóstico financiero automático con IA.</p></div>""", unsafe_allow_html=True)
-    fi = st.file_uploader("Financieros", type=['xlsx', 'csv'])
-    if fi and api_key:
-        df = pd.read_csv(fi) if fi.name.endswith('.csv') else pd.read_excel(fi)
-        cd, cv = st.selectbox("Desc", df.columns), st.selectbox("Val", df.columns)
-        if st.button("ANALIZAR"):
-            res = df.groupby(cd)[cv].sum().sort_values(ascending=False).head(10)
-            st.bar_chart(res)
-            st.markdown(consultar_ia_gemini(f"Analiza: {res.to_string()}"))
 
 # ==============================================================================
 # PIE DE PÁGINA
