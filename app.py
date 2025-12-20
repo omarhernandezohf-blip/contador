@@ -5,7 +5,6 @@ from PIL import Image
 import json
 import time
 import io
-import random
 from datetime import datetime, timedelta
 
 # ==============================================================================
@@ -28,26 +27,22 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 6px solid #0d6efd;
     }
     .rut-card {
-        background-color: #e3f2fd; padding: 20px; border-radius: 10px;
-        border: 2px solid #90caf9; color: #1565c0;
+        background-color: #ffffff; padding: 20px; border-radius: 10px;
+        border-left: 5px solid #1565c0; color: #343a40;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     /* Estilos Tesorería */
     .metric-box-red { background-color: #f8d7da; padding: 10px; border-radius: 5px; color: #721c24; text-align: center; }
     .metric-box-green { background-color: #d1e7dd; padding: 10px; border-radius: 5px; color: #0f5132; text-align: center; }
     
-    /* --- CORRECCIÓN AQUÍ: TEXTO VISIBLE EN MODO OSCURO --- */
+    /* --- CORRECCIÓN DE VISIBILIDAD DE TEXTO --- */
     .instruccion-box {
         background-color: #e2e3e5; 
-        color: #343a40; /* Forzamos color de letra oscuro */
+        color: #212529 !important; /* Texto oscuro forzado */
         padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #343a40;
     }
-    .instruccion-box h4 {
-        color: #343a40; /* Título también oscuro */
-        margin-top: 0;
-    }
-    .instruccion-box p, .instruccion-box li {
-        color: #343a40; /* Párrafos y listas oscuros */
-    }
+    .instruccion-box h4 { color: #000000 !important; margin-top: 0; font-weight: bold; }
+    .instruccion-box p, .instruccion-box li { color: #212529 !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -66,7 +61,7 @@ BASE_RET_COMPRAS = 27 * UVT_2025
 # ==============================================================================
 
 def calcular_dv_colombia(nit_sin_dv):
-    """Calcula el DV según el algoritmo oficial de la DIAN (Módulo 11)"""
+    """Calcula el DV según el algoritmo oficial de la DIAN (Módulo 11). Matemática Real."""
     try:
         nit_str = str(nit_sin_dv).strip()
         if not nit_str.isdigit(): return "Error"
@@ -151,7 +146,7 @@ with st.sidebar:
     
     menu = st.radio("Herramientas:", 
                     ["💰 Tesorería & Flujo de Caja", 
-                     "🔍 Buscador de RUT (DIAN)",  
+                     "🔍 Validador de RUT (Real)",  # Nombre Actualizado
                      "📂 Auditoría Masiva de Gastos", 
                      "👥 Escáner de Nómina (UGPP)", 
                      "💰 Calculadora Costos (Masiva)",
@@ -248,34 +243,41 @@ if menu == "💰 Tesorería & Flujo de Caja":
                 st.error(f"Error: {e}")
 
 # ------------------------------------------------------------------------------
-# MÓDULO: BUSCADOR DE RUT (ANTERIOR)
+# MÓDULO: VALIDADOR DE RUT (CORREGIDO - DATOS REALES)
 # ------------------------------------------------------------------------------
-elif menu == "🔍 Buscador de RUT (DIAN)":
-    st.header("🔍 Consulta Estado RUT")
+elif menu == "🔍 Validador de RUT (Real)":
+    st.header("🔍 Validación de RUT y DV")
     
     st.markdown("""
     <div class='instruccion-box'>
-        <h4>💡 ¿Para qué sirve esta herramienta?</h4>
-        <p>Calcula el <strong>Dígito de Verificación (DV)</strong> oficial sin necesidad de buscar en Google o hacer cuentas manuales. Ideal para cuando estás creando un tercero en el software contable.</p>
-        <p><strong>Nota:</strong> Como la DIAN no permite acceso directo gratuito, simulamos la consulta del estado (Activo/Inactivo) para demostración.</p>
+        <h4>💡 Herramienta Profesional</h4>
+        <p><strong>1. Cálculo Matemático (Exacto):</strong> Obtenemos el Dígito de Verificación (DV) usando el algoritmo oficial de la DIAN (Módulo 11). Esto es matemática pura y no falla.</p>
+        <p><strong>2. Verificación de Estado (Oficial):</strong> Para confirmar si el RUT está "Activo" o "Suspendido", facilitamos el acceso directo a la base de datos pública del MUISCA. <strong>Sin simulaciones.</strong></p>
     </div>
     """, unsafe_allow_html=True)
 
     col_input, col_btn = st.columns([3, 1])
-    nit_busqueda = col_input.text_input("Ingrese NIT o Cédula (Solo números):", max_chars=15)
+    nit_busqueda = col_input.text_input("Ingrese NIT o Cédula (Sin DV):", max_chars=15)
     
-    if col_btn.button("🔎 CONSULTAR") and nit_busqueda:
+    if col_btn.button("🔢 CALCULAR DV") and nit_busqueda:
+        # Cálculo Real
         dv_calculado = calcular_dv_colombia(nit_busqueda)
-        estados, responsabilidades, actividades = ["ACTIVO", "SUSPENDIDO"], ["Responsable IVA", "No Responsable"], ["Comercio", "Servicios"]
-        random.seed(int(nit_busqueda)) 
         
-        st.subheader("📋 Resultado")
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown(f"<div class='rut-card'><h3>NIT: {nit_busqueda}-{dv_calculado}</h3><p>Estado: {random.choice(estados)}</p></div>", unsafe_allow_html=True)
-        with c2:
-            st.write(f"**Actividad:** {random.choice(actividades)}")
-            st.write(f"**Resp:** {random.choice(responsabilidades)}")
+        st.subheader("📋 Resultado del Cálculo")
+        
+        st.markdown(f"""
+        <div class='rut-card'>
+            <h2 style='color: #0d6efd; margin:0;'>NIT: {nit_busqueda} - {dv_calculado}</h2>
+            <p style='color: #333;'>El Dígito de Verificación correcto es: <strong>{dv_calculado}</strong></p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        st.write("### 🌍 Verificación Oficial en la DIAN")
+        st.write("Para garantizar la veracidad de la información, verifique el estado (Activo/Baja) directamente en el portal oficial:")
+        
+        # Botón a sitio oficial
+        st.link_button("🔗 Consultar Estado en la DIAN (Sitio Oficial)", "https://muisca.dian.gov.co/WebRutMuisca/DefConsultaEstadoRUT.faces")
 
 # ------------------------------------------------------------------------------
 # MÓDULO: AUDITORÍA MASIVA DE GASTOS
@@ -286,11 +288,10 @@ elif menu == "📂 Auditoría Masiva de Gastos":
     st.markdown("""
     <div class='instruccion-box'>
         <h4>💡 ¿Para qué sirve esta herramienta?</h4>
-        <p>Es un auditor robot que revisa miles de filas en segundos. Detecta errores tributarios graves antes de que la DIAN lo haga.</p>
+        <p>Es un auditor robot que revisa miles de filas en segundos. Detecta errores tributarios graves.</p>
         <ul>
-            <li><strong>Bancarización (Art 771-5):</strong> Alerta si pagaste en efectivo sumas grandes que serán rechazadas.</li>
-            <li><strong>Retenciones:</strong> Alerta si el monto supera la base y no hay evidencia de retención.</li>
-            <li><strong>Conceptos:</strong> La IA lee la descripción y te dice si ese gasto suena "sospechoso" o no deducible.</li>
+            <li><strong>Bancarización (Art 771-5):</strong> Alerta si pagaste en efectivo sumas grandes.</li>
+            <li><strong>Retenciones:</strong> Alerta si el monto supera la base y no hay retención.</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -333,8 +334,8 @@ elif menu == "👥 Escáner de Nómina (UGPP)":
     st.markdown("""
     <div class='instruccion-box'>
         <h4>💡 ¿Para qué sirve esta herramienta?</h4>
-        <p>La UGPP fiscaliza agresivamente los pagos <strong>"No Salariales"</strong> (Bonos, Rodamientos, Vales). La Ley 1393 dice que estos no pueden superar el 40% del total ganado.</p>
-        <p><strong>Uso:</strong> Sube tu nómina y el sistema marcará en rojo qué empleados están violando esta norma y cuánto debes ajustar en la PILA para evitar multas.</p>
+        <p>La UGPP fiscaliza agresivamente los pagos <strong>"No Salariales"</strong>. La Ley 1393 dice que estos no pueden superar el 40% del total ganado.</p>
+        <p><strong>Uso:</strong> Sube tu nómina y el sistema marcará en rojo qué empleados están violando esta norma.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -361,13 +362,7 @@ elif menu == "💰 Calculadora Costos (Masiva)":
     st.markdown("""
     <div class='instruccion-box'>
         <h4>💡 ¿Para qué sirve esta herramienta?</h4>
-        <p>No confundas lo que le pagas al empleado con lo que le cuesta a la empresa. Esta herramienta calcula el <strong>COSTO REAL</strong> incluyendo:</p>
-        <ul>
-            <li>Seguridad Social del Empleador (Salud, Pensión, ARL).</li>
-            <li>Parafiscales (Caja, SENA, ICBF).</li>
-            <li>Prestaciones Sociales (Primas, Cesantías, Vacaciones).</li>
-        </ul>
-        <p>Ideal para presupuestos anuales.</p>
+        <p>Calcula el <strong>COSTO REAL</strong> para la empresa incluyendo: Seguridad Social del Empleador, Parafiscales y Prestaciones Sociales.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -396,12 +391,7 @@ elif menu == "📸 Digitalización (OCR)":
     st.markdown("""
     <div class='instruccion-box'>
         <h4>💡 ¿Para qué sirve esta herramienta?</h4>
-        <p>Olvídate de digitar facturas físicas a mano. Sube una foto (JPG/PNG) y la Inteligencia Artificial extraerá:</p>
-        <ul>
-            <li>Fecha, NIT, Proveedor.</li>
-            <li>Base, IVA y Total.</li>
-        </ul>
-        <p>Al final, puedes descargar un Excel listo para copiar y pegar en tu software contable.</p>
+        <p>Sube una foto (JPG/PNG) de una factura física y la IA extraerá los datos (Fecha, NIT, Totales) a Excel.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -424,8 +414,7 @@ elif menu == "📊 Analítica Financiera":
     st.markdown("""
     <div class='instruccion-box'>
         <h4>💡 ¿Para qué sirve esta herramienta?</h4>
-        <p>Es como tener un analista financiero experto a tu lado.</p>
-        <p>Sube un Balance de Comprobación o un Libro Diario. La IA analizará los movimientos, detectará tendencias extrañas y te dará un resumen ejecutivo sobre la salud financiera de la empresa.</p>
+        <p>Sube un Balance de Comprobación y la IA analizará los movimientos para darte un resumen ejecutivo.</p>
     </div>
     """, unsafe_allow_html=True)
 
