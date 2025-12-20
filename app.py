@@ -57,6 +57,7 @@ def encontrar_modelo_disponible():
 def auditar_fila(concepto, valor):
     """Envía un solo gasto a la IA para evaluación rápida"""
     try:
+        # Usamos flash por velocidad y economía
         model = genai.GenerativeModel('models/gemini-1.5-flash')
         prompt = f"""
         Actúa como auditor de la DIAN (Colombia). Analiza este gasto:
@@ -69,31 +70,4 @@ def auditar_fila(concepto, valor):
         response = model.generate_content(prompt)
         return json.loads(response.text.replace("```json", "").replace("```", "").strip())
     except:
-        return {"riesgo": "Error", "justificacion": "Fallo en IA", "cuenta_sugerida": "N/A"}
-
-# --- ESTRUCTURA DE PESTAÑAS ---
-tab1, tab2 = st.tabs(["📤 Digitalizador de Facturas", "🕵️ Auditor de Riesgos (IA)"])
-
-# ==========================================
-# PESTAÑA 1: DIGITALIZADOR (Facturas)
-# ==========================================
-with tab1:
-    st.header("⚡ De Imagen a Excel")
-    st.markdown("Sube fotos de facturas y extrae los datos automáticamente.")
-
-    archivos = st.file_uploader("Arrastra facturas aquí", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key="facturas")
-
-    if archivos and st.button("Procesar Facturas"):
-        if not api_key:
-            st.error("Falta la API Key")
-        else:
-            nombre_modelo = encontrar_modelo_disponible()
-            model = genai.GenerativeModel(nombre_modelo)
-            resultados = []
-            barra = st.progress(0)
-            
-            for i, archivo in enumerate(archivos):
-                barra.progress((i + 1) / len(archivos))
-                try:
-                    image = Image.open(archivo)
-                    prompt = """Extrae en JSON: {"fecha": "YYYY-
+        return
