@@ -34,6 +34,10 @@ st.markdown("""
     /* Estilos Tesorería */
     .metric-box-red { background-color: #f8d7da; padding: 10px; border-radius: 5px; color: #721c24; text-align: center; }
     .metric-box-green { background-color: #d1e7dd; padding: 10px; border-radius: 5px; color: #0f5132; text-align: center; }
+    /* Estilos Instrucciones */
+    .instruccion-box {
+        background-color: #e2e3e5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #343a40;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -136,7 +140,7 @@ with st.sidebar:
     st.markdown("---")
     
     menu = st.radio("Herramientas:", 
-                    ["💰 Tesorería & Flujo de Caja",  # <-- NUEVA OPCIÓN
+                    ["💰 Tesorería & Flujo de Caja", 
                      "🔍 Buscador de RUT (DIAN)",  
                      "📂 Auditoría Masiva de Gastos", 
                      "👥 Escáner de Nómina (UGPP)", 
@@ -155,18 +159,24 @@ with st.sidebar:
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# MÓDULO NUEVO: TESORERÍA & FLUJO DE CAJA (RADAR DE LIQUIDEZ)
+# MÓDULO: TESORERÍA & FLUJO DE CAJA
 # ------------------------------------------------------------------------------
 if menu == "💰 Tesorería & Flujo de Caja":
     st.header("💰 Radar de Liquidez y Flujo de Caja 360°")
     
-    st.info("""
-    **Instrucciones para el Tesorero:**
-    1. Ingresa el Saldo en Bancos HOY.
-    2. Sube tu reporte de **Cuentas por Cobrar (Ingresos Futuros)**.
-    3. Sube tu reporte de **Cuentas por Pagar (Egresos Futuros)**.
-    4. La IA proyectará tu flujo de caja y te dirá cuándo te quedarás sin dinero.
-    """)
+    st.markdown("""
+    <div class='instruccion-box'>
+        <h4>💡 ¿Para qué sirve esta herramienta?</h4>
+        <p>Esta herramienta evita que la empresa se quede sin efectivo (liquidez). Cruza lo que tienes que pagar (Proveedores) vs. lo que vas a cobrar (Clientes) y te muestra en qué fecha exacta podrías quedarte en rojo.</p>
+        <p><strong>Pasos:</strong></p>
+        <ol>
+            <li>Ingresa el dinero que hay <strong>hoy en bancos</strong>.</li>
+            <li>Sube el archivo de Excel de <strong>Cuentas por Cobrar</strong> (Cartera).</li>
+            <li>Sube el archivo de Excel de <strong>Cuentas por Pagar</strong> (Proveedores).</li>
+            <li>Dale clic a "Proyectar" y la IA te dará consejos financieros.</li>
+        </ol>
+    </div>
+    """, unsafe_allow_html=True)
     
     # 1. Saldo Inicial
     saldo_hoy = st.number_input("💵 Saldo Disponible en Bancos HOY ($):", min_value=0.0, step=100000.0, format="%.2f")
@@ -196,7 +206,6 @@ if menu == "💰 Tesorería & Flujo de Caja":
         col_valor_cxp = c4.selectbox("Valor a Pagar:", df_cxp.columns, key="v_cxp")
         
         if st.button("🚀 PROYECTAR FLUJO DE CAJA"):
-            # Procesamiento de Datos
             try:
                 # Estandarizar Fechas
                 df_cxc['Fecha'] = pd.to_datetime(df_cxc[col_fecha_cxc])
@@ -218,10 +227,8 @@ if menu == "💰 Tesorería & Flujo de Caja":
                 # --- VISUALIZACIÓN ---
                 st.subheader("📈 Proyección de Liquidez (Próximos 30 días)")
                 
-                # Gráfico de Línea (Saldo en Banco)
                 st.line_chart(calendario.set_index('Fecha')['Saldo Proyectado'])
                 
-                # Indicadores Clave
                 minimo_saldo = calendario['Saldo Proyectado'].min()
                 fecha_quiebre = calendario[calendario['Saldo Proyectado'] < 0]['Fecha'].min()
                 
@@ -234,42 +241,41 @@ if menu == "💰 Tesorería & Flujo de Caja":
                 else:
                     m3.markdown(f"<div class='metric-box-green'>✅ FLUJO SALUDABLE<br>No hay quiebre proyectado</div>", unsafe_allow_html=True)
                 
-                # Tabla Detallada
                 with st.expander("Ver Detalle Diario"):
                     st.dataframe(calendario.style.format({"Ingresos": "${:,.0f}", "Egresos": "${:,.0f}", "Saldo Proyectado": "${:,.0f}"}))
                 
-                # --- ASESOR IA ---
                 if api_key:
                     st.write("---")
                     st.subheader("🧠 Estrategia de Tesorería (IA)")
-                    
-                    # Preparar resumen para la IA
                     resumen_flujo = calendario.head(15).to_string()
                     prompt_tesoreria = f"""
                     Actúa como Gerente Financiero Experto.
-                    Analiza este flujo de caja proyectado para los próximos días.
-                    Saldo Inicial: ${saldo_hoy:,.0f}
-                    
-                    Datos Diarios:
-                    {resumen_flujo}
-                    
-                    1. ¿Hay riesgo de iliquidez? ¿Cuándo?
-                    2. Sugiere una estrategia de pagos (¿Qué priorizar? ¿Qué negociar?).
-                    3. Dame una recomendación clara para el empresario.
+                    Analiza este flujo de caja proyectado. Saldo Inicial: ${saldo_hoy:,.0f}
+                    Datos: {resumen_flujo}
+                    1. ¿Hay riesgo de iliquidez?
+                    2. Sugiere estrategia de pagos.
                     """
-                    
                     with st.spinner("Analizando la mejor estrategia financiera..."):
                         consejo = consultar_ia_gemini(prompt_tesoreria)
                         st.markdown(consejo)
                         
             except Exception as e:
-                st.error(f"Error al procesar fechas o valores. Asegúrate que las columnas sean correctas. Detalle: {e}")
+                st.error(f"Error al procesar fechas o valores. Detalle: {e}")
 
 # ------------------------------------------------------------------------------
 # MÓDULO: BUSCADOR DE RUT (ANTERIOR)
 # ------------------------------------------------------------------------------
 elif menu == "🔍 Buscador de RUT (DIAN)":
     st.header("🔍 Consulta Estado RUT")
+    
+    st.markdown("""
+    <div class='instruccion-box'>
+        <h4>💡 ¿Para qué sirve esta herramienta?</h4>
+        <p>Calcula el <strong>Dígito de Verificación (DV)</strong> oficial sin necesidad de buscar en Google o hacer cuentas manuales. Ideal para cuando estás creando un tercero en el software contable.</p>
+        <p><strong>Nota:</strong> Como la DIAN no permite acceso directo gratuito, simulamos la consulta del estado (Activo/Inactivo) para demostración.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
     col_input, col_btn = st.columns([3, 1])
     nit_busqueda = col_input.text_input("Ingrese NIT o Cédula (Solo números):", max_chars=15)
     
@@ -291,6 +297,19 @@ elif menu == "🔍 Buscador de RUT (DIAN)":
 # ------------------------------------------------------------------------------
 elif menu == "📂 Auditoría Masiva de Gastos":
     st.header("📂 Auditoría Fiscal Masiva")
+    
+    st.markdown("""
+    <div class='instruccion-box'>
+        <h4>💡 ¿Para qué sirve esta herramienta?</h4>
+        <p>Es un auditor robot que revisa miles de filas en segundos. Detecta errores tributarios graves antes de que la DIAN lo haga.</p>
+        <ul>
+            <li><strong>Bancarización (Art 771-5):</strong> Alerta si pagaste en efectivo sumas grandes que serán rechazadas.</li>
+            <li><strong>Retenciones:</strong> Alerta si el monto supera la base y no hay evidencia de retención.</li>
+            <li><strong>Conceptos:</strong> La IA lee la descripción y te dice si ese gasto suena "sospechoso" o no deducible.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
     archivo = st.file_uploader("Cargar Auxiliar (.xlsx) - Soporta hasta 5GB", type=['xlsx'])
     if archivo:
         df = pd.read_excel(archivo)
@@ -325,6 +344,15 @@ elif menu == "📂 Auditoría Masiva de Gastos":
 # ------------------------------------------------------------------------------
 elif menu == "👥 Escáner de Nómina (UGPP)":
     st.header("👥 Escáner Anti-UGPP")
+    
+    st.markdown("""
+    <div class='instruccion-box'>
+        <h4>💡 ¿Para qué sirve esta herramienta?</h4>
+        <p>La UGPP fiscaliza agresivamente los pagos <strong>"No Salariales"</strong> (Bonos, Rodamientos, Vales). La Ley 1393 dice que estos no pueden superar el 40% del total ganado.</p>
+        <p><strong>Uso:</strong> Sube tu nómina y el sistema marcará en rojo qué empleados están violando esta norma y cuánto debes ajustar en la PILA para evitar multas.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
     archivo_nom = st.file_uploader("Cargar Nómina (.xlsx) - Soporta hasta 5GB", type=['xlsx'])
     if archivo_nom:
         df_n = pd.read_excel(archivo_nom)
@@ -344,6 +372,20 @@ elif menu == "👥 Escáner de Nómina (UGPP)":
 # ------------------------------------------------------------------------------
 elif menu == "💰 Calculadora Costos (Masiva)":
     st.header("💰 Costos de Nómina")
+    
+    st.markdown("""
+    <div class='instruccion-box'>
+        <h4>💡 ¿Para qué sirve esta herramienta?</h4>
+        <p>No confundas lo que le pagas al empleado con lo que le cuesta a la empresa. Esta herramienta calcula el <strong>COSTO REAL</strong> incluyendo:</p>
+        <ul>
+            <li>Seguridad Social del Empleador (Salud, Pensión, ARL).</li>
+            <li>Parafiscales (Caja, SENA, ICBF).</li>
+            <li>Prestaciones Sociales (Primas, Cesantías, Vacaciones).</li>
+        </ul>
+        <p>Ideal para presupuestos anuales.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
     ac = st.file_uploader("Cargar Personal (.xlsx) - Soporta hasta 5GB", type=['xlsx'])
     if ac:
         dc = pd.read_excel(ac)
@@ -365,6 +407,19 @@ elif menu == "💰 Calculadora Costos (Masiva)":
 # ------------------------------------------------------------------------------
 elif menu == "📸 Digitalización (OCR)":
     st.header("📸 OCR Facturas")
+    
+    st.markdown("""
+    <div class='instruccion-box'>
+        <h4>💡 ¿Para qué sirve esta herramienta?</h4>
+        <p>Olvídate de digitar facturas físicas a mano. Sube una foto (JPG/PNG) y la Inteligencia Artificial extraerá:</p>
+        <ul>
+            <li>Fecha, NIT, Proveedor.</li>
+            <li>Base, IVA y Total.</li>
+        </ul>
+        <p>Al final, puedes descargar un Excel listo para copiar y pegar en tu software contable.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
     af = st.file_uploader("Fotos - Soporta hasta 5GB", type=["jpg", "png"], accept_multiple_files=True)
     if af and st.button("PROCESAR") and api_key:
         do = []
@@ -380,6 +435,15 @@ elif menu == "📸 Digitalización (OCR)":
 # ------------------------------------------------------------------------------
 elif menu == "📊 Analítica Financiera":
     st.header("📊 Analítica IA")
+    
+    st.markdown("""
+    <div class='instruccion-box'>
+        <h4>💡 ¿Para qué sirve esta herramienta?</h4>
+        <p>Es como tener un analista financiero experto a tu lado.</p>
+        <p>Sube un Balance de Comprobación o un Libro Diario. La IA analizará los movimientos, detectará tendencias extrañas y te dará un resumen ejecutivo sobre la salud financiera de la empresa.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
     fi = st.file_uploader("Datos Financieros - Soporta hasta 5GB", type=['xlsx', 'csv'])
     if fi and api_key:
         dfi = pd.read_csv(fi) if fi.name.endswith('.csv') else pd.read_excel(fi)
