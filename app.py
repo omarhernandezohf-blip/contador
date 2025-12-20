@@ -6,6 +6,7 @@ import json
 import time
 import io
 from datetime import datetime, timedelta
+import xml.etree.ElementTree as ET # Nueva librería para leer XML
 
 # ==============================================================================
 # 1. CONFIGURACIÓN VISUAL PROFESIONAL
@@ -136,6 +137,53 @@ def ocr_factura(imagen):
     except:
         return None
 
+# --- NUEVA FUNCIÓN: PARSER DE XML DIAN (UBL 2.1) ---
+def parsear_xml_dian(archivo_xml):
+    """Extrae datos clave de Facturación Electrónica Colombia"""
+    try:
+        tree = ET.parse(archivo_xml)
+        root = tree.getroot()
+        
+        # Namespaces comunes en DIAN
+        ns = {
+            'cac': 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2',
+            'cbc': 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'
+        }
+        
+        # Función auxiliar para buscar con seguridad
+        def get_text(path, root_elem=root):
+            elem = root_elem.find(path, ns)
+            return elem.text if elem is not None else ""
+
+        # Extracción de Datos
+        data = {}
+        data['Archivo'] = archivo_xml.name
+        data['Prefijo'] = get_text('.//cbc:ID')
+        data['Fecha Emision'] = get_text('.//cbc:IssueDate')
+        
+        # Emisor
+        emisor = root.find('.//cac:AccountingSupplierParty', ns)
+        if emisor:
+            data['NIT Emisor'] = get_text('.//cbc:CompanyID', emisor.find('.//cac:PartyTaxScheme', ns))
+            data['Emisor'] = get_text('.//cbc:RegistrationName', emisor.find('.//cac:PartyTaxScheme', ns))
+            
+        # Receptor
+        receptor = root.find('.//cac:AccountingCustomerParty', ns)
+        if receptor:
+            data['NIT Receptor'] = get_text('.//cbc:CompanyID', receptor.find('.//cac:PartyTaxScheme', ns))
+            data['Receptor'] = get_text('.//cbc:RegistrationName', receptor.find('.//cac:PartyTaxScheme', ns))
+
+        # Totales
+        monetary = root.find('.//cac:LegalMonetaryTotal', ns)
+        if monetary:
+            data['Total a Pagar'] = float(get_text('cbc:PayableAmount', monetary) or 0)
+            data['Base Imponible'] = float(get_text('cbc:LineExtensionAmount', monetary) or 0)
+            data['Total Impuestos'] = float(get_text('cbc:TaxInclusiveAmount', monetary) or 0) - data['Base Imponible']
+
+        return data
+    except Exception as e:
+        return {"Archivo": archivo_xml.name, "Error": "No es un XML Válido o Estructura Desconocida"}
+
 # ==============================================================================
 # 4. BARRA LATERAL
 # ==============================================================================
@@ -145,8 +193,9 @@ with st.sidebar:
     st.markdown("---")
     
     menu = st.radio("Herramientas:", 
-                    ["💰 Tesorería & Flujo de Caja", 
-                     "🔍 Validador de RUT (Real)",  # Nombre Actualizado
+                    ["📧 Lector XML (Facturación)", # <-- NUEVA HERRAMIENTA
+                     "💰 Tesorería & Flujo de Caja", 
+                     "🔍 Validador de RUT (Real)",  
                      "📂 Auditoría Masiva de Gastos", 
                      "👥 Escáner de Nómina (UGPP)", 
                      "💰 Calculadora Costos (Masiva)",
@@ -164,22 +213,64 @@ with st.sidebar:
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
+# MÓDULO NUEVO: LECTOR MASIVO XML
+# ------------------------------------------------------------------------------
+if menu == "📧 Lector XML (Facturación)":
+    st.header("📧 Extractor Masivo de Facturas Electrónicas (XML)")
+    
+    st.markdown("""
+    <div class='instruccion-box'>
+        <h4>💡 ¿Para qué sirve esta herramienta?</h4>
+        <p>Los contadores perdemos horas digitando facturas mirando el PDF, pero la <strong>verdad legal</strong> está en el XML. Esta herramienta:</p>
+        <ol>
+            <li>Recibe cientos de archivos <strong>.XML</strong> (Facturas de Venta o Compra).</li>
+            <li>Extrae automáticamente: NITs, Fechas, Bases, IVAs y Totales.</li>
+            <li>Genera un <strong>Excel plano</strong> listo para importar a tu software contable.</li>
+        </ol>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    archivos_xml = st.file_uploader("Arrastra tus archivos XML aquí (Máx 5GB)", type=['xml'], accept_multiple_files=True)
+    
+    if archivos_xml and st.button("🚀 PROCESAR XMLs"):
+        datos_xml = []
+        barra_xml = st.progress(0)
+        
+        for i, archivo in enumerate(archivos_xml):
+            barra_xml.progress((i+1)/len(archivos_xml))
+            # Procesar
+            info = parsear_xml_dian(archivo)
+            datos_xml.append(info)
+            
+        if datos_xml:
+            df_xml = pd.DataFrame(datos_xml)
+            
+            # Reordenar columnas para que se vea ordenado
+            cols_orden = ['Fecha Emision', 'Prefijo', 'NIT Emisor', 'Emisor', 'NIT Receptor', 'Base Imponible', 'Total Impuestos', 'Total a Pagar', 'Archivo']
+            # Filtramos solo las que existen en el df
+            cols_finales = [c for c in cols_orden if c in df_xml.columns]
+            df_xml = df_xml[cols_finales]
+            
+            st.success(f"✅ Se procesaron {len(archivos_xml)} facturas exitosamente.")
+            st.dataframe(df_xml)
+            
+            # Descarga
+            out_xml = io.BytesIO()
+            with pd.ExcelWriter(out_xml, engine='xlsxwriter') as writer:
+                df_xml.to_excel(writer, index=False)
+                
+            st.download_button("📥 Descargar Resumen en Excel", out_xml.getvalue(), "Resumen_Facturacion_XML.xlsx")
+
+# ------------------------------------------------------------------------------
 # MÓDULO: TESORERÍA & FLUJO DE CAJA
 # ------------------------------------------------------------------------------
-if menu == "💰 Tesorería & Flujo de Caja":
+elif menu == "💰 Tesorería & Flujo de Caja":
     st.header("💰 Radar de Liquidez y Flujo de Caja 360°")
     
     st.markdown("""
     <div class='instruccion-box'>
         <h4>💡 ¿Para qué sirve esta herramienta?</h4>
         <p>Esta herramienta evita que la empresa se quede sin efectivo (liquidez). Cruza lo que tienes que pagar (Proveedores) vs. lo que vas a cobrar (Clientes) y te muestra en qué fecha exacta podrías quedarte en rojo.</p>
-        <p><strong>Pasos:</strong></p>
-        <ol>
-            <li>Ingresa el dinero que hay <strong>hoy en bancos</strong>.</li>
-            <li>Sube el archivo de Excel de <strong>Cuentas por Cobrar</strong> (Cartera).</li>
-            <li>Sube el archivo de Excel de <strong>Cuentas por Pagar</strong> (Proveedores).</li>
-            <li>Dale clic a "Proyectar" y la IA te dará consejos financieros.</li>
-        </ol>
     </div>
     """, unsafe_allow_html=True)
     
@@ -251,8 +342,8 @@ elif menu == "🔍 Validador de RUT (Real)":
     st.markdown("""
     <div class='instruccion-box'>
         <h4>💡 Herramienta Profesional</h4>
-        <p><strong>1. Cálculo Matemático (Exacto):</strong> Obtenemos el Dígito de Verificación (DV) usando el algoritmo oficial de la DIAN (Módulo 11). Esto es matemática pura y no falla.</p>
-        <p><strong>2. Verificación de Estado (Oficial):</strong> Para confirmar si el RUT está "Activo" o "Suspendido", facilitamos el acceso directo a la base de datos pública del MUISCA. <strong>Sin simulaciones.</strong></p>
+        <p><strong>1. Cálculo Matemático (Exacto):</strong> Obtenemos el Dígito de Verificación (DV) usando el algoritmo oficial de la DIAN (Módulo 11).</p>
+        <p><strong>2. Verificación de Estado (Oficial):</strong> Para confirmar si el RUT está "Activo" o "Suspendido", facilitamos el acceso directo a la base de datos pública del MUISCA.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -260,23 +351,16 @@ elif menu == "🔍 Validador de RUT (Real)":
     nit_busqueda = col_input.text_input("Ingrese NIT o Cédula (Sin DV):", max_chars=15)
     
     if col_btn.button("🔢 CALCULAR DV") and nit_busqueda:
-        # Cálculo Real
         dv_calculado = calcular_dv_colombia(nit_busqueda)
-        
         st.subheader("📋 Resultado del Cálculo")
-        
         st.markdown(f"""
         <div class='rut-card'>
             <h2 style='color: #0d6efd; margin:0;'>NIT: {nit_busqueda} - {dv_calculado}</h2>
             <p style='color: #333;'>El Dígito de Verificación correcto es: <strong>{dv_calculado}</strong></p>
         </div>
         """, unsafe_allow_html=True)
-        
         st.markdown("---")
         st.write("### 🌍 Verificación Oficial en la DIAN")
-        st.write("Para garantizar la veracidad de la información, verifique el estado (Activo/Baja) directamente en el portal oficial:")
-        
-        # Botón a sitio oficial
         st.link_button("🔗 Consultar Estado en la DIAN (Sitio Oficial)", "https://muisca.dian.gov.co/WebRutMuisca/DefConsultaEstadoRUT.faces")
 
 # ------------------------------------------------------------------------------
@@ -289,10 +373,6 @@ elif menu == "📂 Auditoría Masiva de Gastos":
     <div class='instruccion-box'>
         <h4>💡 ¿Para qué sirve esta herramienta?</h4>
         <p>Es un auditor robot que revisa miles de filas en segundos. Detecta errores tributarios graves.</p>
-        <ul>
-            <li><strong>Bancarización (Art 771-5):</strong> Alerta si pagaste en efectivo sumas grandes.</li>
-            <li><strong>Retenciones:</strong> Alerta si el monto supera la base y no hay retención.</li>
-        </ul>
     </div>
     """, unsafe_allow_html=True)
 
@@ -335,7 +415,6 @@ elif menu == "👥 Escáner de Nómina (UGPP)":
     <div class='instruccion-box'>
         <h4>💡 ¿Para qué sirve esta herramienta?</h4>
         <p>La UGPP fiscaliza agresivamente los pagos <strong>"No Salariales"</strong>. La Ley 1393 dice que estos no pueden superar el 40% del total ganado.</p>
-        <p><strong>Uso:</strong> Sube tu nómina y el sistema marcará en rojo qué empleados están violando esta norma.</p>
     </div>
     """, unsafe_allow_html=True)
 
