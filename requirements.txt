@@ -1,8 +1,11 @@
 streamlit
-google-generativeai
 pandas
+gspread
+google-generativeai
+Pillow
 openpyxl
+xlsxwriter
+google-auth
 google-auth-oauthlib
-google-api-python-client
-pillow
+google-auth-httplib2
 requests
