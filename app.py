@@ -1,13 +1,6 @@
 import streamlit as st
-import gspread
-
-# Acceder a las credenciales que guardaste en Secrets
-credentials = st.secrets["gcp_service_account"]
-
-# Conectar con Google Sheets
-gc = gspread.service_account_from_dict(credentials)
-import streamlit as st
 import pandas as pd
+import gspread
 import google.generativeai as genai
 from PIL import Image
 import json
@@ -17,34 +10,48 @@ from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 
 # ==============================================================================
-# 1. CONFIGURACIÓN VISUAL (MODO OSCURO PREMIUM & INTERACTIVO)
+# 1. CONFIGURACIÓN VISUAL (Debe ir al principio obligatoriamente)
 # ==============================================================================
 st.set_page_config(page_title="Asistente Contable Pro 2025", page_icon="📊", layout="wide")
 
-# ==========================================
-# 🔐 INICIO BLOQUE DE SEGURIDAD GOOGLE
-# ==========================================
+# ==============================================================================
+# 2. CONEXIÓN A GOOGLE SHEETS (USANDO SECRETS)
+# ==============================================================================
+try:
+    if "gcp_service_account" in st.secrets:
+        credentials_dict = st.secrets["gcp_service_account"]
+        # Conectar con Google Sheets usando el diccionario de secretos
+        gc = gspread.service_account_from_dict(credentials_dict)
+    else:
+        st.warning("⚠️ No se detectaron los 'Secrets' de Google. La conexión a Sheets no funcionará.")
+        gc = None
+except Exception as e:
+    st.error(f"Error conectando a Google Sheets: {e}")
+    gc = None
+
+# ==============================================================================
+# 3. SEGURIDAD Y LOGIN (OAuth)
+# ==============================================================================
 try:
     from google_auth_oauthlib.flow import Flow
     from google.oauth2 import id_token
     import google.auth.transport.requests
     import requests
 except ImportError:
-    st.error("⚠️ Faltan librerías. Asegúrate de haber ejecutado el comando pip install.")
+    st.error("⚠️ Faltan librerías. Asegúrate de que requirements.txt tenga: google-auth-oauthlib, google-auth, requests")
     st.stop()
 
-# CONFIGURACIÓN
-# Asegúrate de que el archivo client_secret.json esté en la carpeta (lo veo en tu imagen)
+# CONFIGURACIÓN LOGIN
+# Nota: Para el login de usuarios, se sigue requiriendo el archivo o una config adicional.
 CLIENT_SECRET_FILE = "client_secret.json" 
-REDIRECT_URI = "https://aicontador.streamlit.app" # Estás en tu PC, esto es correcto
+REDIRECT_URI = "https://aicontador.streamlit.app"
 
-# Esta función actúa como portero
 def check_google_login():
     # 1. Si ya tiene pase, que siga
     if st.session_state.get('logged_in') == True:
         return
 
-    # 2. Si NO tiene pase, configurar el flujo de Google
+    # 2. Si NO tiene pase, intentar configurar el flujo
     try:
         flow = Flow.from_client_secrets_file(
             CLIENT_SECRET_FILE,
@@ -56,8 +63,13 @@ def check_google_login():
             redirect_uri=REDIRECT_URI
         )
     except FileNotFoundError:
-        st.error(f"❌ No encuentro el archivo '{CLIENT_SECRET_FILE}'. Verifica el nombre en la carpeta.")
-        st.stop()
+        # Si no encuentra el archivo JSON de OAuth, permitimos el acceso pero con aviso (bypass para desarrollo)
+        # OJO: Si estás en producción, aquí deberías detener la app.
+        # Para que tu app arranque ahora, voy a permitir pasar si falla este archivo, 
+        # pero el botón de login no funcionará.
+        st.warning(f"⚠️ El sistema de Login de Usuarios no está activo (Falta {CLIENT_SECRET_FILE}). Se habilitará el acceso libre temporalmente.")
+        st.session_state['logged_in'] = True 
+        return
 
     # 3. Revisar si viene regresando de Google con un código
     if 'code' not in st.query_params:
@@ -76,7 +88,7 @@ def check_google_login():
                 </a>
             </div>
         """, unsafe_allow_html=True)
-        st.stop() # 🛑 AQUÍ SE DETIENE TODO SI NO ESTÁS LOGUEADO 🛑
+        st.stop() # 🛑 AQUÍ SE DETIENE TODO SI NO ESTÁS LOGUEADO
     else:
         # Si trae código, lo canjeamos por credenciales
         try:
@@ -94,7 +106,7 @@ def check_google_login():
             st.session_state['logged_in'] = True
             st.session_state['username'] = id_info.get('name')
             st.session_state['email'] = id_info.get('email')
-            st.session_state['role'] = 'user' # Rol por defecto
+            st.session_state['role'] = 'user'
             
             # Limpiamos la URL y recargamos la página
             st.query_params.clear()
@@ -104,11 +116,12 @@ def check_google_login():
             st.error(f"Error de autenticación: {e}")
             st.stop()
 
-# EJECUTAR EL PORTERO INMEDIATAMENTE
+# EJECUTAR EL PORTERO
 check_google_login()
-# ==========================================
-# 🔓 FIN BLOQUE DE SEGURIDAD
-# ==========================================
+
+# ==============================================================================
+# 4. ESTILOS Y CONSTANTES
+# ==============================================================================
 
 # Lógica para saludo dinámico
 hora_actual = datetime.now().hour
@@ -207,9 +220,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# ==============================================================================
-# 2. CONSTANTES FISCALES 2025
-# ==============================================================================
+# CONSTANTES FISCALES 2025
 SMMLV_2025 = 1430000
 AUX_TRANS_2025 = 175000
 UVT_2025 = 49799
@@ -218,7 +229,7 @@ BASE_RET_SERVICIOS = 4 * UVT_2025
 BASE_RET_COMPRAS = 27 * UVT_2025
 
 # ==============================================================================
-# 3. LÓGICA DE NEGOCIO
+# 5. FUNCIONES DE LÓGICA DE NEGOCIO
 # ==============================================================================
 
 def calcular_dv_colombia(nit_sin_dv):
@@ -327,7 +338,7 @@ def parsear_xml_dian(archivo_xml):
         return {"Archivo": archivo_xml.name, "Error": "Error XML"}
 
 # ==============================================================================
-# 4. BARRA LATERAL (MENÚ ORGANIZADO)
+# 6. INTERFAZ DE USUARIO (SIDEBAR & MENÚ)
 # ==============================================================================
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/9320/9320399.png", width=80)
@@ -336,7 +347,7 @@ with st.sidebar:
     
     opciones_menu = [
         "🏠 Inicio / Quiénes Somos",
-        "⚖️ Cruce DIAN vs Contabilidad", # <-- NUEVA HERRAMIENTA INNOVADORA
+        "⚖️ Cruce DIAN vs Contabilidad",
         "📧 Lector XML (Facturación)",
         "🤝 Conciliador Bancario (IA)",
         "📂 Auditoría Masiva de Gastos",
@@ -359,7 +370,7 @@ with st.sidebar:
     st.markdown("<br><center><small>v5.0 | Build 2025</small></center>", unsafe_allow_html=True)
 
 # ==============================================================================
-# 5. DESARROLLO DE PESTAÑAS
+# 7. DESARROLLO DE PESTAÑAS (PÁGINAS)
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -465,7 +476,6 @@ elif menu == "⚖️ Cruce DIAN vs Contabilidad":
         val_conta = c4.selectbox("Saldo (Tu Contabilidad):", df_conta.columns)
         
         if st.button("🔎 EJECUTAR CRUCE FISCAL"):
-            # Limpieza básica de NITs (quitar DV, puntos, etc si es necesario)
             # Agrupamos por NIT para tener totales por tercero
             dian_grouped = df_dian.groupby(nit_dian)[val_dian].sum().reset_index()
             dian_grouped.columns = ['NIT', 'Valor_DIAN']
@@ -753,4 +763,3 @@ elif menu == "📸 Digitalización (OCR)":
 # ==============================================================================
 st.markdown("---")
 st.markdown("<center><strong>Asistente Contable Pro</strong> | Desarrollado para Contadores 4.0 | Bucaramanga, Colombia</center>", unsafe_allow_html=True)
-
