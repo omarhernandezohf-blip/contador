@@ -1,6 +1,4 @@
-import streamlit as st
 import pandas as pd
-import gspread
 import google.generativeai as genai
 from PIL import Image
 import json
@@ -763,3 +761,4 @@ elif menu == "📸 Digitalización (OCR)":
 # ==============================================================================
 st.markdown("---")
 st.markdown("<center><strong>Asistente Contable Pro</strong> | Desarrollado para Contadores 4.0 | Bucaramanga, Colombia</center>", unsafe_allow_html=True)
+
