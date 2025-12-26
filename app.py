@@ -139,7 +139,7 @@ BASE_RET_SERVICIOS = 4 * UVT_2025
 BASE_RET_COMPRAS = 27 * UVT_2025
 
 # ==============================================================================
-# 5. FUNCIONES DE LÓGICA DE NEGOCIO
+# 4. FUNCIONES DE LÓGICA DE NEGOCIO
 # ==============================================================================
 
 def calcular_dv_colombia(nit_sin_dv):
@@ -248,7 +248,7 @@ def parsear_xml_dian(archivo_xml):
         return {"Archivo": archivo_xml.name, "Error": "Error XML"}
 
 # ==============================================================================
-# 6. INTERFAZ DE USUARIO (SIDEBAR & MENÚ)
+# 5. INTERFAZ DE USUARIO (SIDEBAR & MENÚ)
 # ==============================================================================
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/9320/9320399.png", width=80)
@@ -265,6 +265,7 @@ with st.sidebar:
         "💰 Tesorería & Flujo de Caja",
         "💰 Calculadora Costos (Masiva)",
         "📊 Analítica Financiera",
+        "📈 Reportes Gerenciales & Notas NIIF (IA)", # NUEVO MÓDULO AÑADIDO
         "🔍 Validador de RUT (Real)",
         "📸 Digitalización (OCR)"
     ]
@@ -277,10 +278,10 @@ with st.sidebar:
         api_key = st.text_input("API Key Google:", type="password")
         if api_key: genai.configure(api_key=api_key)
     
-    st.markdown("<br><center><small>v5.0 | Build 2025</small></center>", unsafe_allow_html=True)
+    st.markdown("<br><center><small>v6.0 | Build 2025</small></center>", unsafe_allow_html=True)
 
 # ==============================================================================
-# 7. DESARROLLO DE PESTAÑAS (PÁGINAS)
+# 6. DESARROLLO DE PESTAÑAS (PÁGINAS)
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -308,7 +309,7 @@ if menu == "🏠 Inicio / Quiénes Somos":
             st.info("📧 **XML Miner:** Extrae datos de miles de facturas en segundos.")
         with c_tool2:
             st.info("🤝 **Bank Match:** Concilia bancos con IA.")
-            st.info("🛡️ **Escudo Fiscal:** Audita gastos y nómina masivamente.")
+            st.info("📈 **Notas NIIF:** Redacción automática de revelaciones.")
         
     with col_intro2:
         st.markdown("""
@@ -318,7 +319,7 @@ if menu == "🏠 Inicio / Quiénes Somos":
                 <li>Descarga auxiliares de tu ERP (Siigo, World Office).</li>
                 <li>Descarga el reporte de terceros de la DIAN.</li>
                 <li>Usa el "Cruce DIAN" para detectar ingresos/costos omitidos.</li>
-                <li>Usa "Escudo Fiscal" para auditar deducibilidad.</li>
+                <li>Usa "Reportes NIIF" para redactar las notas finales.</li>
             </ol>
         </div>
         """, unsafe_allow_html=True)
@@ -354,7 +355,7 @@ if menu == "🏠 Inicio / Quiénes Somos":
         """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
-# NUEVO: CRUCE DIAN VS CONTABILIDAD
+# 1. CRUCE DIAN VS CONTABILIDAD
 # ------------------------------------------------------------------------------
 elif menu == "⚖️ Cruce DIAN vs Contabilidad":
     st.header("⚖️ Auditor de Exógena (Cruce DIAN)")
@@ -421,7 +422,7 @@ elif menu == "⚖️ Cruce DIAN vs Contabilidad":
                 st.success("✅ ¡Increíble! Tu contabilidad cuadra perfectamente con la DIAN.")
 
 # ------------------------------------------------------------------------------
-# 1. LECTOR XML
+# 2. LECTOR XML
 # ------------------------------------------------------------------------------
 elif menu == "📧 Lector XML (Facturación)":
     st.header("📧 Minería de Datos XML (Facturación)")
@@ -446,7 +447,7 @@ elif menu == "📧 Lector XML (Facturación)":
         st.download_button("📥 Descargar Reporte Maestro (.xlsx)", out.getvalue(), "Resumen_XML.xlsx")
 
 # ------------------------------------------------------------------------------
-# 2. CONCILIADOR BANCARIO
+# 3. CONCILIADOR BANCARIO
 # ------------------------------------------------------------------------------
 elif menu == "🤝 Conciliador Bancario (IA)":
     st.header("🤝 Conciliación Bancaria Inteligente")
@@ -494,7 +495,7 @@ elif menu == "🤝 Conciliador Bancario (IA)":
             with t3: st.dataframe(df_libro[~df_libro['Conciliado']], use_container_width=True)
 
 # ------------------------------------------------------------------------------
-# 3. AUDITORÍA GASTOS
+# 4. AUDITORÍA GASTOS
 # ------------------------------------------------------------------------------
 elif menu == "📂 Auditoría Masiva de Gastos":
     st.header("📂 Auditoría Fiscal Masiva")
@@ -524,7 +525,7 @@ elif menu == "📂 Auditoría Masiva de Gastos":
             st.dataframe(pd.DataFrame(res), use_container_width=True)
 
 # ------------------------------------------------------------------------------
-# 4. ESCÁNER NÓMINA UGPP
+# 5. ESCÁNER NÓMINA UGPP
 # ------------------------------------------------------------------------------
 elif menu == "👥 Escáner de Nómina (UGPP)":
     st.header("👥 Escáner de Riesgo UGPP")
@@ -548,7 +549,7 @@ elif menu == "👥 Escáner de Nómina (UGPP)":
             st.dataframe(pd.DataFrame(res), use_container_width=True)
 
 # ------------------------------------------------------------------------------
-# 5. TESORERÍA
+# 6. TESORERÍA
 # ------------------------------------------------------------------------------
 elif menu == "💰 Tesorería & Flujo de Caja":
     st.header("💰 Radar de Liquidez 360°")
@@ -583,7 +584,7 @@ elif menu == "💰 Tesorería & Flujo de Caja":
             except: st.error("Error en el formato de fechas. Asegúrate que sean columnas de fecha válidas.")
 
 # ------------------------------------------------------------------------------
-# 6. CALCULADORA COSTOS
+# 7. CALCULADORA COSTOS
 # ------------------------------------------------------------------------------
 elif menu == "💰 Calculadora Costos (Masiva)":
     st.header("💰 Costeo Real de Nómina")
@@ -608,7 +609,7 @@ elif menu == "💰 Calculadora Costos (Masiva)":
             st.dataframe(pd.DataFrame(rc), use_container_width=True)
 
 # ------------------------------------------------------------------------------
-# 7. ANALÍTICA
+# 8. ANALÍTICA
 # ------------------------------------------------------------------------------
 elif menu == "📊 Analítica Financiera":
     st.header("📊 Inteligencia Financiera IA")
@@ -629,7 +630,101 @@ elif menu == "📊 Analítica Financiera":
             st.markdown(consultar_ia_gemini(f"Actúa como auditor financiero. Analiza estos saldos: {res.to_string()}"))
 
 # ------------------------------------------------------------------------------
-# 8. VALIDADOR RUT
+# 9. NARRADOR FINANCIERO & NOTAS NIIF (NUEVA INNOVACIÓN)
+# ------------------------------------------------------------------------------
+elif menu == "📈 Reportes Gerenciales & Notas NIIF (IA)":
+    st.header("📈 Narrador Financiero & Revelaciones NIIF")
+    st.markdown("""
+    <div class='instruccion-box' style='border-left: 4px solid #ad00ff;'>
+        <h4>💡 Financial Storytelling</h4>
+        <p>No entregues solo números. Esta herramienta analiza tus Estados Financieros comparativos, detecta las variaciones más críticas y <strong>redacta automáticamente</strong> el informe para la Gerencia y las Notas de Revelación bajo NIIF.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Carga de archivos comparativos
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("📅 Año Actual (2025)")
+        file_actual = st.file_uploader("Cargar Balance/P&G Año Actual", type=['xlsx'])
+    with col2:
+        st.subheader("📅 Año Anterior (2024)")
+        file_anterior = st.file_uploader("Cargar Balance/P&G Año Anterior", type=['xlsx'])
+
+    if file_actual and file_anterior:
+        try:
+            df_act = pd.read_excel(file_actual)
+            df_ant = pd.read_excel(file_anterior)
+            
+            st.write("---")
+            st.subheader("⚙️ Configuración del Análisis")
+            c1, c2, c3 = st.columns(3)
+            # Asumimos que el usuario selecciona la cuenta y el valor
+            col_cuenta = c1.selectbox("Columna 'Cuenta Contable':", df_act.columns)
+            col_valor_act = c2.selectbox("Valor Año Actual:", df_act.columns)
+            col_valor_ant = c3.selectbox("Valor Año Anterior:", df_ant.columns)
+
+            if st.button("✨ GENERAR INFORME INTELIGENTE") and api_key:
+                # 1. Preparación de Datos (Programación)
+                # Unimos los dos dataframes por la cuenta contable
+                df_act = df_act.groupby(col_cuenta)[col_valor_act].sum().reset_index()
+                df_ant = df_ant.groupby(col_cuenta)[col_valor_ant].sum().reset_index()
+                
+                merged = pd.merge(df_act, df_ant, on=col_cuenta, how='inner').fillna(0)
+                merged['Variacion_Abs'] = merged[col_valor_act] - merged[col_valor_ant]
+                merged['Variacion_Rel'] = (merged['Variacion_Abs'] / merged[col_valor_ant]).replace([float('inf'), -float('inf')], 0) * 100
+                
+                # Filtramos las variaciones más significativas (Top 5 subidas y bajadas) para no saturar a la IA
+                top_variaciones = merged.reindex(merged.Variacion_Abs.abs().sort_values(ascending=False).index).head(10)
+
+                # 2. Visualización de Alto Impacto (Diseño)
+                st.markdown("### 📊 Tablero de Control Gerencial")
+                
+                # KPIs Principales
+                # Intentamos identificar ingresos y gastos por convención contable (Clase 4 y 5)
+                # Convertimos a string para buscar el prefijo
+                ingresos_act = merged[merged[col_cuenta].astype(str).str.startswith('4', na=False)][col_valor_act].sum()
+                gastos_act = merged[merged[col_cuenta].astype(str).str.startswith('5', na=False)][col_valor_act].sum()
+                utilidad = ingresos_act - gastos_act # Simplificado
+                
+                k1, k2, k3 = st.columns(3)
+                k1.markdown(f"<div class='metric-box-green'><h3>Ingresos</h3><p>${ingresos_act:,.0f}</p></div>", unsafe_allow_html=True)
+                k2.markdown(f"<div class='metric-box-red'><h3>Gastos</h3><p>${gastos_act:,.0f}</p></div>", unsafe_allow_html=True)
+                k3.markdown(f"<div class='rut-card' style='text-align:center'><h3>Utilidad Aprox</h3><p>${utilidad:,.0f}</p></div>", unsafe_allow_html=True)
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                # Gráfica de Variaciones
+                st.subheader("📉 Variaciones Significativas (Análisis Horizontal)")
+                st.bar_chart(top_variaciones.set_index(col_cuenta)['Variacion_Abs'])
+
+                # 3. Inteligencia Artificial (Contabilidad Experta)
+                st.subheader("🧠 Análisis Cualitativo & Notas NIIF")
+                
+                with st.spinner("🤖 El Consultor IA está redactando el informe..."):
+                    # Prompt de Ingeniería Avanzada
+                    prompt = f"""
+                    Actúa como un Contador Senior experto en NIIF y Análisis Financiero.
+                    Analiza la siguiente tabla de variaciones contables entre el año anterior y el actual:
+                    {top_variaciones.to_string()}
+
+                    GENERA DOS SALIDAS:
+                    1. UN INFORME GERENCIAL: Explicando en lenguaje de negocios (claro y directo para el dueño de la empresa) qué pasó con el dinero. Usa tono profesional pero empático. Enfócate en las causas probables de las variaciones grandes.
+                    2. BORRADOR DE NOTAS A LOS ESTADOS FINANCIEROS: Redacta la nota de revelación técnica bajo norma NIIF PYMES para las 3 cuentas con mayor variación, justificando la materialidad.
+                    
+                    Usa formato Markdown profesional.
+                    """
+                    
+                    respuesta_ia = consultar_ia_gemini(prompt)
+                    st.markdown(respuesta_ia)
+                    
+                    # Botón de descarga del texto
+                    st.download_button("📥 Descargar Informe (.txt)", respuesta_ia, "Informe_Gerencial_NIIF.txt")
+
+        except Exception as e:
+            st.error(f"Error procesando los archivos: {e}. Asegúrate de que las columnas tengan nombres similares y códigos contables.")
+
+# ------------------------------------------------------------------------------
+# 10. VALIDADOR RUT
 # ------------------------------------------------------------------------------
 elif menu == "🔍 Validador de RUT (Real)":
     st.header("🔍 Validador Oficial RUT")
@@ -648,7 +743,7 @@ elif menu == "🔍 Validador de RUT (Real)":
         st.link_button("🔗 Verificar Estado en Muisca (DIAN)", "https://muisca.dian.gov.co/WebRutMuisca/DefConsultaEstadoRUT.faces")
 
 # ------------------------------------------------------------------------------
-# 9. OCR FACTURAS
+# 11. OCR FACTURAS
 # ------------------------------------------------------------------------------
 elif menu == "📸 Digitalización (OCR)":
     st.header("📸 Digitalización de Facturas Físicas")
