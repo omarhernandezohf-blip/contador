@@ -10,21 +10,20 @@ from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 
 # ==============================================================================
-# 1. CONFIGURACIÓN VISUAL (OBLIGATORIO AL PRINCIPIO)
+# 1. CONFIGURACIÓN VISUAL
 # ==============================================================================
 st.set_page_config(page_title="Asistente Contable Pro 2025", page_icon="📊", layout="wide")
 
 # ==============================================================================
-# 2. CONEXIÓN A GOOGLE SHEETS (OPCIONAL/SEGURO)
+# 2. CONEXIÓN A GOOGLE SHEETS (OPCIONAL)
 # ==============================================================================
-# Intentamos conectar solo si existen las credenciales en Secrets
 gc = None
 try:
     if "gcp_service_account" in st.secrets:
         credentials_dict = st.secrets["gcp_service_account"]
         gc = gspread.service_account_from_dict(credentials_dict)
-except Exception as e:
-    pass # Si falla, la app sigue funcionando sin Sheets
+except Exception:
+    pass
 
 # ==============================================================================
 # 3. ESTILOS Y CONSTANTES
@@ -256,7 +255,7 @@ with st.sidebar:
         "💰 Tesorería & Flujo de Caja",
         "💰 Calculadora Costos (Masiva)",
         "📊 Analítica Financiera",
-        "📈 Reportes Gerenciales & Notas NIIF (IA)", # La joya de la corona
+        "📈 Reportes Gerenciales & Notas NIIF (IA)",
         "🔍 Validador de RUT (Real)",
         "📸 Digitalización (OCR)"
     ]
@@ -269,7 +268,7 @@ with st.sidebar:
         api_key = st.text_input("API Key Google:", type="password")
         if api_key: genai.configure(api_key=api_key)
     
-    st.markdown("<br><center><small>v7.0 | Build 2025</small></center>", unsafe_allow_html=True)
+    st.markdown("<br><center><small>v8.0 | Build 2025</small></center>", unsafe_allow_html=True)
 
 # ==============================================================================
 # 6. DESARROLLO DE PESTAÑAS (PÁGINAS)
@@ -318,6 +317,9 @@ if menu == "🏠 Inicio / Quiénes Somos":
     st.markdown("---")
     
     st.subheader("🔑 Activación del Núcleo IA (Gratuito)")
+    
+    # Video Tutorial añadido aquí
+    st.video("https://www.youtube.com/watch?v=dHn3d66Qppw")
     
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -378,23 +380,19 @@ elif menu == "⚖️ Cruce DIAN vs Contabilidad":
         val_conta = c4.selectbox("Saldo (Tu Contabilidad):", df_conta.columns)
         
         if st.button("🔎 EJECUTAR CRUCE FISCAL"):
-            # Agrupamos por NIT para tener totales por tercero
             dian_grouped = df_dian.groupby(nit_dian)[val_dian].sum().reset_index()
             dian_grouped.columns = ['NIT', 'Valor_DIAN']
             
             conta_grouped = df_conta.groupby(nit_conta)[val_conta].sum().reset_index()
             conta_grouped.columns = ['NIT', 'Valor_Conta']
             
-            # Cruce (Merge)
             cruce = pd.merge(dian_grouped, conta_grouped, on='NIT', how='outer').fillna(0)
             cruce['Diferencia'] = cruce['Valor_DIAN'] - cruce['Valor_Conta']
             
-            # Filtrar solo diferencias significativas
             diferencias = cruce[abs(cruce['Diferencia']) > 1000] # Umbral de $1.000 pesos
             
             st.success("Cruce Finalizado.")
             
-            # Métricas
             m1, m2 = st.columns(2)
             m1.metric("Total Reportado DIAN", f"${cruce['Valor_DIAN'].sum():,.0f}")
             m2.metric("Total Tu Contabilidad", f"${cruce['Valor_Conta'].sum():,.0f}")
@@ -403,7 +401,6 @@ elif menu == "⚖️ Cruce DIAN vs Contabilidad":
                 st.error(f"⚠️ Se encontraron {len(diferencias)} terceros con diferencias significativas.")
                 st.dataframe(diferencias.style.format("{:,.0f}"), use_container_width=True)
                 
-                # Descarga
                 out = io.BytesIO()
                 with pd.ExcelWriter(out, engine='xlsxwriter') as w:
                     diferencias.to_excel(w, index=False)
@@ -621,7 +618,7 @@ elif menu == "📊 Analítica Financiera":
             st.markdown(consultar_ia_gemini(f"Actúa como auditor financiero. Analiza estos saldos: {res.to_string()}"))
 
 # ------------------------------------------------------------------------------
-# 9. NARRADOR FINANCIERO & NOTAS NIIF (NUEVA INNOVACIÓN)
+# 9. NARRADOR FINANCIERO & NOTAS NIIF (IA)
 # ------------------------------------------------------------------------------
 elif menu == "📈 Reportes Gerenciales & Notas NIIF (IA)":
     st.header("📈 Narrador Financiero & Revelaciones NIIF")
